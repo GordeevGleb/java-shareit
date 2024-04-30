@@ -16,7 +16,7 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class ItemController {
 
-    private final String USER_ID = "X-Sharer-User-Id";
+    private static final String USER_ID = "X-Sharer-User-Id";
     private final ItemService itemService;
 
     @PostMapping
