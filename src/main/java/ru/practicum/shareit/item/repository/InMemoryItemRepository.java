@@ -55,7 +55,8 @@ public class InMemoryItemRepository implements ItemRepository {
         if (!userRepository.isUserExists(userId)) {
             throw new NotFoundException("user not found");
         }
-        if (item.getOwner().getId() != userId) {
+        Long itemUserId = item.getOwner().getId();
+        if (itemUserId != userId) {
             throw new IncorrectUserOperationException("incorrect user");
         }
         if (itemDto.getName() != null) {
