@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
@@ -9,11 +8,9 @@ import ru.practicum.shareit.user.service.UserService;
 
 import javax.validation.Valid;
 import java.util.Collection;
-import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
+
+
 @RestController
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor

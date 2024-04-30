@@ -56,7 +56,8 @@ public class InMemoryUserRepository implements UserRepository {
     public void delete(Long id) {
         users.remove(id);
     }
-@Override
+
+    @Override
     public boolean isUserExists(Long id) {
         return users.containsKey(id);
     }

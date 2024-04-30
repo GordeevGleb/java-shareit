@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import ru.practicum.shareit.exception.ConcurrentException;
 import ru.practicum.shareit.exception.IncorrectUserOperationException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -31,13 +30,6 @@ public class InMemoryItemRepository implements ItemRepository {
         itemDto.setId(counter++);
         Item item = ItemMapper.toItem(itemDto, user);
         items.put(item.getId(), item);
-//        items.compute(userId, (id, userItems) -> {
-//            if (userItems == null) {
-//                userItems = new ArrayList<>();
-//            }
-//            userItems.add(item);
-//            return userItems;
-//        });
         return ItemMapper.toItemDto(item);
     }
 
@@ -51,30 +43,11 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public ItemDto findByid(Long itemId) {
-//        List<Item> allItems = new ArrayList<>();
-//        items.forEach((user, items1) -> allItems.addAll(items1));
         return ItemMapper.toItemDto(items.get(itemId));
     }
 
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto itemDto) {
-//        Item item = items.get(userId).stream()
-//                .filter(item1 -> item1.getId() == itemId)
-//                .findFirst()
-//                .orElseThrow(() -> new NotFoundException("item not found"));
-//
-//        if (itemDto.getName() != null) {
-//            item.setName(itemDto.getName());
-//        }
-//        if (itemDto.getDescription() != null) {
-//            item.setDescription(itemDto.getDescription());
-//        }
-//        if (itemDto.getAvailable() != null) {
-//            item.setAvailable(itemDto.getAvailable());
-//        }
-//
-//        items.get(userId).removeIf(item1 -> item1.getId() == itemId);
-//        items.get(userId).add(item);
         if (!items.containsKey(itemId)) {
             throw new NotFoundException("item not found");
         }
