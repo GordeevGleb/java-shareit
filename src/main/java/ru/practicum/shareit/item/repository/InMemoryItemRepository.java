@@ -36,7 +36,7 @@ public class InMemoryItemRepository implements ItemRepository {
     @Override
     public Collection<ItemDto> getUsersItems(Long userId) {
         return items.values().stream()
-                .filter(item -> item.getOwner().getId() == userId)
+                .filter(item -> item.getOwner().getId().equals(userId))
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
@@ -55,8 +55,7 @@ public class InMemoryItemRepository implements ItemRepository {
         if (!userRepository.isUserExists(userId)) {
             throw new NotFoundException("user not found");
         }
-        Long itemUserId = item.getOwner().getId();
-        if (itemUserId != userId) {
+        if (!item.getOwner().getId().equals(userId)) {
             throw new IncorrectUserOperationException("incorrect user");
         }
         if (itemDto.getName() != null) {
