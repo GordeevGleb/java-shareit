@@ -16,4 +16,5 @@ public interface ItemService {
 
     Collection<ItemDto> searchByText(String text);
 
+    Boolean isExist(Long id);
 }

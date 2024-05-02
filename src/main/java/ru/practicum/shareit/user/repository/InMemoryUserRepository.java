@@ -3,8 +3,6 @@ package ru.practicum.shareit.user.repository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
@@ -19,11 +17,10 @@ public class InMemoryUserRepository implements UserRepository {
     private Long counter = 1L;
 
     @Override
-    public UserDto create(UserDto userDto) {
-        userDto.setId(counter++);
-        User user = UserMapper.toUser(userDto);
+    public User create(User user) {
+        user.setId(counter++);
         users.put(user.getId(), user);
-        return userDto;
+        return user;
     }
 
     @Override
@@ -37,14 +34,14 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public User update(Long id, UserDto userDto) {
+    public User update(Long id, User user) {
         if (isUserExists(id)) {
             User oldUser = users.get(id);
-            if (userDto.getName() != null) {
-                oldUser.setName(userDto.getName());
+            if (user.getName() != null) {
+                oldUser.setName(user.getName());
             }
-            if (userDto.getEmail() != null) {
-                oldUser.setEmail(userDto.getEmail());
+            if (user.getEmail() != null) {
+                oldUser.setEmail(user.getEmail());
             }
             return oldUser;
         } else {
