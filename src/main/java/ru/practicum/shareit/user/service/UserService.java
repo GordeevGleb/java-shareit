@@ -11,12 +11,11 @@ public interface UserService {
 
    Collection<UserDto> getAll();
 
-   UserDto findByid(Long id);
+   UserDto findById(Long id);
 
    UserDto update(Long id, UserDto userDto);
 
    void delete(Long id);
 
    Boolean isExist(Long id);
-
 }
