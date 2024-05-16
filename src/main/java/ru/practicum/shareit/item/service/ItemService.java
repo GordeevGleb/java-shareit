@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.Collection;
 
@@ -10,11 +11,9 @@ public interface ItemService {
 
     Collection<ItemDto> getUsersItems(Long userId);
 
-    ItemDto findByid(Long itemId);
+    ItemDto findById(Long itemId, Long userId);
 
     ItemDto update(Long userId, Long itemId, ItemDto itemDto);
 
     Collection<ItemDto> searchByText(String text);
-
-    Boolean isExist(Long id);
 }
