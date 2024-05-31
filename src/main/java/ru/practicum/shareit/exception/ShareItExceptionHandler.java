@@ -53,4 +53,10 @@ public class ShareItExceptionHandler {
     public Map<String, String> handleBookingStateException(final StateException e) {
         return Map.of("error", e.getMessage());
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handlePaginationException(final PaginationException e) {
+        return Map.of("error", e.getMessage());
+    }
 }

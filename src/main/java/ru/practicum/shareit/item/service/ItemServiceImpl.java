@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
@@ -10,6 +12,7 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.IncorrectUserOperationException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.PaginationException;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.mapper.CommentMapper;
 import ru.practicum.shareit.item.comment.model.Comment;
@@ -18,6 +21,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -45,24 +50,37 @@ public class ItemServiceImpl implements ItemService {
 
     private final CommentMapper commentMapper;
 
+    private final ItemRequestRepository itemRequestRepository;
+
+
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
         log.info("creating item");
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("user id " + userId + " not found"));
-        Item item = itemRepository.save(itemMapper.toItem(itemDto, user));
+        Item item = itemMapper.toItem(itemDto, user);
+        if (itemDto.getRequestId() != null) {
+            ItemRequest itemRequest = itemRequestRepository.findById(itemDto.getRequestId())
+                            .orElseThrow(() -> new NotFoundException("request not found"));
+            item.setRequest(itemRequest);
+        }
+        itemRepository.save(item);
         ItemDto toItemDto = itemMapper.toItemDto(item);
         log.info("item {} created", toItemDto.getId());
         return toItemDto;
     }
 
     @Override
-    public Collection<ItemDto> getUsersItems(Long userId) {
+    public Collection<ItemDto> getUsersItems(Long userId, Integer from, Integer size) {
         log.info("send user's item list");
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("user id " + userId + " not found");
         }
-        Collection<Item> items = itemRepository.findAllByOwnerId(userId);
+        if (from < 0 || size < 1) {
+            throw new PaginationException("wrong pagination params");
+        }
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.Direction.ASC, "id");
+        Page<Item> items = itemRepository.findAllByOwnerId(userId, pageRequest);
         Collection<Booking> lastBookings = bookingRepository
                 .findAllByItemOwnerIdAndBookingStatusIsAndStartBefore(userId,
                         BookingStatus.APPROVED,
@@ -101,7 +119,7 @@ public class ItemServiceImpl implements ItemService {
 
             resultList.add(itemDto);
         }
-        log.info("user's list size: {}", items.size());
+        log.info("user's list size: {}", resultList.size());
         return resultList;
     }
 
@@ -190,13 +208,18 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDto> searchByText(String text) {
+    public Collection<ItemDto> searchByText(String text, Integer from, Integer size) {
         log.info("search item by text");
+
+        if (from < 0 || size < 1) {
+            throw new PaginationException("wrong pagination params");
+        }
         if (text.isBlank()) {
             return new ArrayList<>();
         }
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.Direction.ASC, "id");
         Collection<ItemDto> itemDtos = itemRepository
-                .searchByText(text)
+                .searchByText(text, pageRequest)
                 .stream()
                 .map(item -> itemMapper.toItemDto(item))
                 .collect(Collectors.toList());
