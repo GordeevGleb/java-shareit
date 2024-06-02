@@ -135,9 +135,15 @@ public class UserServiceTest {
 //                .name("test name")
 //                .email("test@mail.ru")
 //                .build();
-//        userRepository.save(user);
+//        when(userRepository.existsById(user.getId()))
+//                .thenReturn(true);
 //
-//        userService.delete(user.getId());
+//        when(userRepository.findById(any()))
+//                .thenReturn(Optional.of(user));
+//
+//        UserDto userDto = userService.findById(user.getId());
+//
+//        userService.delete(userDto.getId());
 //        verify(userRepository, Mockito.times(1)).deleteById(user.getId());
 //    }
 }
