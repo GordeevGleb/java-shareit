@@ -95,6 +95,7 @@ public class UserServiceTest {
         when(userRepository.findById(Mockito.any()))
                 .thenReturn(Optional.of(userToCheck));
 
+
         UserDto userDto = userService.findById(888L);
         assertThat(userDto, is(notNullValue()));
     }
@@ -147,6 +148,8 @@ public class UserServiceTest {
         userDto = userService.update(1L, userDto);
 
         assertThat(userDto, is(notNullValue()));
+        assertEquals(userDto.getEmail(), user.getEmail());
+        assertEquals(userDto.getName(), user.getName());
     }
 
     @Test

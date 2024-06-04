@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.PaginationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -27,12 +28,13 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-
 public class ItemRequestServiceTest {
 
     @Autowired
@@ -76,6 +78,7 @@ public class ItemRequestServiceTest {
 
         ItemRequestDto itemRequestDtoCreated = itemRequestService.create(2L, requestIncDto);
         assertThat(itemRequestDtoCreated, is(notNullValue()));
+        assertEquals(request.getDescription(), requestIncDto.getDescription());
     }
 
     @Test
@@ -273,6 +276,42 @@ public class ItemRequestServiceTest {
         invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
                 () -> itemRequestService.getAll(1L, 0, 0));
         assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
+    }
+
+    @Test
+    void notFoundExceptionTest() {
+        ItemRequestIncDto itemRequest = ItemRequestIncDto.builder()
+                .description("request text")
+                .build();
+        User user = User.builder()
+                .id(1L)
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+        Long unknownUserId = 999L;
+        Long unknownRequestId = 999L;
+
+        when(itemRequestRepository.findById(anyLong()))
+                .thenThrow(NotFoundException.class);
+        assertThrows(NotFoundException.class, () -> itemRequestRepository.findById(1L));
+
+        assertThrows(NotFoundException.class, () -> itemRequestService.create(unknownUserId, itemRequest));
+
+        assertThrows(NotFoundException.class, () -> itemRequestService.get(unknownUserId));
+
+        assertThrows(NotFoundException.class,
+                () -> itemRequestService.getAll(unknownUserId, 0, 11));
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemRequestService.getById(unknownUserId, unknownRequestId));
+        assertEquals(notFoundException.getMessage(), "user id 999 not found");
+
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(user));
+        User savedUser = userRepository.findById(user.getId()).get();
+
+         assertThrows(NotFoundException.class,
+                () -> itemRequestService.getById(savedUser.getId(), unknownRequestId));
     }
 }
 

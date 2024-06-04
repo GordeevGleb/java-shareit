@@ -124,7 +124,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto findById(Long itemId, Long userId) {
+    public ItemDto findById(Long userId, Long itemId) {
         log.info("search item {}", itemId);
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("item not found"));

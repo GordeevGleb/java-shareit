@@ -82,15 +82,6 @@ public class UserServiceImpl implements UserService {
         log.info("user removed");
     }
 
-    private Boolean emailExists(String email) {
-        log.info("email check");
-        List<String> allEmails = userRepository.findAll()
-                .stream()
-                .map(user -> user.getEmail())
-                .collect(Collectors.toList());
-        return allEmails.contains(email);
-    }
-
     @Override
     public Boolean isExist(Long id) {
         log.info("user exist check");

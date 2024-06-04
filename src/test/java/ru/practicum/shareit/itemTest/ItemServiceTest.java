@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.IncorrectUserOperationException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.PaginationException;
 import ru.practicum.shareit.item.comment.model.Comment;
@@ -27,7 +28,9 @@ import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.when;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -125,10 +128,13 @@ public class ItemServiceTest {
 
         itemDto = itemService.update(1L, 1L, itemDto);
         assertThat(itemDto, is(notNullValue()));
+        assertEquals(item.getName(), itemUpdated.getName());
+        assertEquals(item.getDescription(), itemUpdated.getDescription());
+        assertEquals(item.getAvailable(), itemUpdated.getAvailable());
     }
 
     @Test
-    void getAllTest() {
+    void getUsersItemsTest() {
         User owner = User.builder()
                 .id(2L)
                 .name("owner")
@@ -320,19 +326,18 @@ public class ItemServiceTest {
 
         NotFoundException notFoundException;
 
-        notFoundException = Assertions.assertThrows(NotFoundException.class,
+        notFoundException = assertThrows(NotFoundException.class,
                 () -> itemService.create(1L, itemDto));
         assertThat(notFoundException.getMessage(), is("user id 1 not found"));
 
-        notFoundException = Assertions.assertThrows(NotFoundException.class,
+        notFoundException = assertThrows(NotFoundException.class,
                 () -> itemService.update(1L, 1L, itemDto));
         assertThat(notFoundException.getMessage(), is("user not found"));
 
-        notFoundException = Assertions.assertThrows(NotFoundException.class,
+        notFoundException = assertThrows(NotFoundException.class,
                 () -> itemService.findById(1L, 1L));
         assertThat(notFoundException.getMessage(), is("item not found"));
-
-        notFoundException = Assertions.assertThrows(NotFoundException.class,
+        notFoundException = assertThrows(NotFoundException.class,
                 () -> itemService.getUsersItems(1L, 0, 11));
         assertThat(notFoundException.getMessage(), is("user id 1 not found"));
     }
@@ -353,19 +358,19 @@ public class ItemServiceTest {
 
         PaginationException invalidPageParamsException;
 
-        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
+        invalidPageParamsException = assertThrows(PaginationException.class,
                 () -> itemService.getUsersItems(2L, -1, 11));
         assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
 
-        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
+        invalidPageParamsException = assertThrows(PaginationException.class,
                 () -> itemService.getUsersItems(2L, 0, 0));
         assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
 
-        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
+        invalidPageParamsException = assertThrows(PaginationException.class,
                 () -> itemService.searchByText("text", -1, 11));
         assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
 
-        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
+        invalidPageParamsException = assertThrows(PaginationException.class,
                 () -> itemService.searchByText("text", -1, 0));
         assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
     }
@@ -407,5 +412,45 @@ public class ItemServiceTest {
                 .thenReturn(new PageImpl<>(items));
         itemDtos = itemService.searchByText("item", 0, 11);
         assertThat(itemDtos, is(notNullValue()));
+    }
+
+    @Test
+    void incorrectUserOperationExceptionTest() {
+        User user = User.builder()
+                .id(1L)
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+
+        User owner = User.builder()
+                .id(2L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .owner(owner)
+                .available(true)
+                .build();
+
+        ItemDto itemDto = ItemDto.builder()
+                .name("updated name")
+                .description("updated description")
+                .available(true)
+                .build();
+
+        when(itemRepository.findById(any()))
+                .thenReturn(Optional.of(item));
+        when(userRepository.existsById(any()))
+                .thenReturn(true);
+        IncorrectUserOperationException e =
+                assertThrows(IncorrectUserOperationException.class,
+                () -> itemService.update(user.getId(),
+                        item.getId(), itemDto));
+
+        assertEquals(e.getMessage(), "incorrect user operation");
     }
 }

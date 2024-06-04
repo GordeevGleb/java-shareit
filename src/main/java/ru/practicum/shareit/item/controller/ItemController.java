@@ -42,9 +42,9 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto findById(@PathVariable Long itemId,
-                            @RequestHeader(value = USER_ID, required = false) Long userId) {
-        return itemService.findById(itemId, userId);
+    public ItemDto findById(@RequestHeader(value = USER_ID, required = false) Long userId,
+                            @PathVariable Long itemId) {
+        return itemService.findById(userId, itemId);
     }
 
     @GetMapping("/search")

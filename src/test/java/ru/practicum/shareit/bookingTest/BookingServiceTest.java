@@ -28,6 +28,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
@@ -418,4 +419,42 @@ public class BookingServiceTest {
         bookingInfoDtoList = bookingService.getOwnersBookings(1L, "CURRENT", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
     }
+
+//    @Test
+//    void notFoundExceptionTest() {
+//        User owner = User.builder()
+//                .id(1L)
+//                .name("owner name")
+//                .email("owner@mail.ru")
+//                .build();
+//        User booker = User.builder()
+//                .id(2L)
+//
+//        Item item = Item.builder()
+//                .id(1L)
+//                .name("test name")
+//                .description("description")
+//                .owner(owner)
+//                .build();
+//
+//        Long unknownUserId = 999L;
+//        Long unknownItemId = 999L;
+//        BookingDto bookingDto = BookingDto.builder()
+//                .start(LocalDateTime.now().plusDays(1))
+//                .end(LocalDateTime.now().plusDays(2))
+//                .itemId(item.getId())
+//                .build();
+//        Booking booking = Booking.builder()
+//                        .id(1L)
+//                                .start(LocalDateTime.now().plusDays(1))
+//                                        .end(LocalDateTime.now().plusDays(2))
+//                                                .item(item)
+//                                                        .
+//
+//        when(userRepository.findById(anyLong()))
+//                .thenReturn(Optional.empty());
+//        assertThrows(NotFoundException.class, () -> bookingService.create(unknownUserId, bookingDto));
+//
+//        assertThrows(NotFoundException.class, () -> bookingService.updateStatus(unknownUserId))
+//    }
 }
