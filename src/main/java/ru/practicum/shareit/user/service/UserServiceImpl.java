@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("user not found"));
         String oldUserEmail = oldUser.getEmail();
         String newUserEmail = userDto.getEmail();
-        if (emailExists(newUserEmail) && !oldUserEmail.equals(newUserEmail)) {
+        if (userRepository.existsByEmail(newUserEmail) && !oldUserEmail.equals(newUserEmail)) {
             throw new ConcurrentException("email already exists");
         }
         if (Optional.ofNullable(userDto.getName()).isPresent()) {

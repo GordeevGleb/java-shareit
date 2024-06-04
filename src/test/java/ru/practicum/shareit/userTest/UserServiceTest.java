@@ -1,11 +1,13 @@
 package ru.practicum.shareit.userTest;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import ru.practicum.shareit.exception.ConcurrentException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
@@ -61,6 +63,25 @@ public class UserServiceTest {
                 .thenThrow(NotFoundException.class);
 
         assertThrows(NotFoundException.class, () -> userService.findById(999L));
+    }
+
+    @Test
+    void ConcurrentExceptionTest() {
+        UserDto userDto = UserDto.builder()
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+        User user = User.builder()
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(user));
+
+        when(userRepository.existsByEmail(anyString()))
+                .thenThrow(ConcurrentException.class);
+
+        assertThrows(ConcurrentException.class, ()-> userService.update(1L, userDto));
     }
 
     @Test
@@ -128,22 +149,18 @@ public class UserServiceTest {
         assertThat(userDto, is(notNullValue()));
     }
 
-//    @Test
-//    void deleteTest() {
-//        User user = User.builder()
-//                .id(1L)
-//                .name("test name")
-//                .email("test@mail.ru")
-//                .build();
-//        when(userRepository.existsById(user.getId()))
-//                .thenReturn(true);
-//
-//        when(userRepository.findById(any()))
-//                .thenReturn(Optional.of(user));
-//
-//        UserDto userDto = userService.findById(user.getId());
-//
-//        userService.delete(userDto.getId());
-//        verify(userRepository, Mockito.times(1)).deleteById(user.getId());
-//    }
+    @Test
+    void deleteTest() {
+        User user = User.builder()
+                .id(1L)
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(user));
+
+        userRepository.deleteById(user.getId());
+        verify(userRepository, times(1)).deleteById(user.getId());
+    }
 }
