@@ -309,7 +309,7 @@ public class ItemServiceTest {
                 .thenReturn(List.of(lastBooking));
         when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndStartAfter(any(), any(), any(), any()))
                 .thenReturn(List.of(nextBooking));
-        itemDto = itemService.findById(1L, 2L);
+        itemDto = itemService.findById(2L, 1L);
         assertThat(itemDto, is(notNullValue()));
     }
 
