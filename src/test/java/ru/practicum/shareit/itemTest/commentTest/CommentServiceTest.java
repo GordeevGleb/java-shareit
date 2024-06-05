@@ -1,4 +1,4 @@
-package ru.practicum.shareit.itemTest;
+package ru.practicum.shareit.itemTest.commentTest;
 
 
 import lombok.RequiredArgsConstructor;
