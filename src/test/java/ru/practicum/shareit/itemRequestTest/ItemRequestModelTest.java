@@ -10,6 +10,7 @@ import ru.practicum.shareit.request.dto.ItemRequestIncDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,8 +22,11 @@ class ItemRequestModelTest {
     @Autowired
     private JacksonTester<ItemRequestDto> json;
 
+    @Autowired
+    JacksonTester<ItemRequestIncDto> jsonInc;
+
     @Test
-    void testBookingDto() throws Exception {
+    void ItemRequestDtoTest() throws Exception {
         ItemRequestIncDto itemRequestIncDto = ItemRequestIncDto.builder()
                 .description("description")
                 .build();
@@ -47,6 +51,16 @@ class ItemRequestModelTest {
         assertThat(result).hasJsonPath("$.items");
 
         assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(1);
+        assertThat(result).extractingJsonPathStringValue("$.description").isEqualTo("description");
+    }
+
+    @Test
+    void itemRequestIncDtoTest() throws IOException {
+        ItemRequestIncDto itemRequestIncDto = ItemRequestIncDto.builder()
+                .description("description")
+                .build();
+        JsonContent<ItemRequestIncDto> result = jsonInc.write(itemRequestIncDto);
+        assertThat(result).hasJsonPath("$.description");
         assertThat(result).extractingJsonPathStringValue("$.description").isEqualTo("description");
     }
 
