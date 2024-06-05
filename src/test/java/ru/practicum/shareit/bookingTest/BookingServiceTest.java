@@ -709,6 +709,46 @@ public class BookingServiceTest {
                 () -> bookingService.getOwnersBookings(booker.getId(), "ALL", -1, 11));
         assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "ALL", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "CURRENT", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "CURRENT", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "PAST", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "PAST", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "PAST", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "PAST", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "FUTURE", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "FUTURE", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "WAITING", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "WAITING", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", 0, 0));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "REJECTED", -1, 11));
+        assertThrows(PaginationException.class,
+                () -> bookingService.getOwnersBookings(booker.getId(), "REJECTED", 0, 0));
     }
 
     @Test
