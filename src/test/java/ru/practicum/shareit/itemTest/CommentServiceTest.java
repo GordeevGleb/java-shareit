@@ -3,14 +3,18 @@ package ru.practicum.shareit.itemTest;
 
 import lombok.RequiredArgsConstructor;
 import org.assertj.core.internal.bytebuddy.matcher.ElementMatcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.NotAvailableException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.model.Comment;
@@ -25,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
@@ -106,5 +111,64 @@ public class CommentServiceTest {
 
         commentDto = commentService.add(3L, 1L, commentDto);
         assertThat(commentDto, is(notNullValue()));
+    }
+
+    @Test
+    void userNotFoundExceptionTest() {
+        CommentDto commentDto = CommentDto.builder()
+                .text("comment")
+                .build();
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class,
+                () -> commentService.add(1L, 1L, commentDto));
+    }
+
+    @Test
+    void itemNotFoundTest() {
+        User user = User.builder()
+                .id(3L)
+                .name("user")
+                .email("user@mail.ru")
+                .build();
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(user));
+        when(itemRepository.findById(any()))
+                .thenReturn(Optional.empty());
+        CommentDto commentDto = CommentDto.builder()
+                .text("comment")
+                .build();
+        assertThrows(NotFoundException.class,
+                () -> commentService.add(user.getId(),
+                        1L, commentDto));
+    }
+
+    @Test
+    void notAvailableExceptionTest() {
+        User owner = User.builder()
+                .id(2L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(owner));
+        when(itemRepository.findById(any()))
+                .thenReturn(Optional.of(item));
+        CommentDto commentDto = CommentDto.builder()
+                .text("comment")
+                .build();
+        when(bookingRepository
+                .findTopByItemIdAndBookerIdAndEndIsBeforeAndBookingStatusIs(any(), any(), any(), any(), any()))
+                .thenReturn(Optional.empty());
+        assertThrows(NotAvailableException.class,
+                () -> commentService.add(2L, 1L, commentDto));
+
     }
 }
