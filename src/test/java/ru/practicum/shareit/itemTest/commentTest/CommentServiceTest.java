@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.hamcrest.Matchers.is;
@@ -120,8 +121,9 @@ public class CommentServiceTest {
                 .build();
         when(userRepository.findById(any()))
                 .thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class,
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
                 () -> commentService.add(1L, 1L, commentDto));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
     }
 
     @Test
@@ -138,9 +140,10 @@ public class CommentServiceTest {
         CommentDto commentDto = CommentDto.builder()
                 .text("comment")
                 .build();
-        assertThrows(NotFoundException.class,
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
                 () -> commentService.add(user.getId(),
                         1L, commentDto));
+        assertEquals(notFoundException.getMessage(), "item id 1 not found");
     }
 
     @Test
@@ -167,8 +170,9 @@ public class CommentServiceTest {
         when(bookingRepository
                 .findTopByItemIdAndBookerIdAndEndIsBeforeAndBookingStatusIs(any(), any(), any(), any(), any()))
                 .thenReturn(Optional.empty());
-        assertThrows(NotAvailableException.class,
+        NotAvailableException notAvailableException = assertThrows(NotAvailableException.class,
                 () -> commentService.add(2L, 1L, commentDto));
+        assertEquals(notAvailableException.getMessage(), "booking not found");
 
     }
 }

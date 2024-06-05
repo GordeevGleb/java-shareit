@@ -61,7 +61,6 @@ public class UserServiceTest {
     void NotFoundExceptionTest() {
         when(userRepository.findById(Mockito.any()))
                 .thenThrow(NotFoundException.class);
-
         assertThrows(NotFoundException.class, () -> userService.findById(999L));
     }
 
@@ -80,7 +79,6 @@ public class UserServiceTest {
 
         when(userRepository.existsByEmail(anyString()))
                 .thenThrow(ConcurrentException.class);
-
         assertThrows(ConcurrentException.class, ()-> userService.update(1L, userDto));
     }
 
