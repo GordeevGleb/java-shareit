@@ -21,8 +21,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -163,5 +162,16 @@ public class UserServiceTest {
 
         userRepository.deleteById(user.getId());
         verify(userRepository, times(1)).deleteById(user.getId());
+    }
+
+    @Test
+    void isExistTest() {
+        when(userRepository.existsById(any()))
+                .thenReturn(true);
+        assertTrue(userService.isExist(1L));
+
+        when(userRepository.existsById(any()))
+                .thenReturn(false);
+        assertFalse(userService.isExist(1L));
     }
 }

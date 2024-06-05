@@ -28,7 +28,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
@@ -709,5 +709,16 @@ public class BookingServiceTest {
                 () -> bookingService.getOwnersBookings(booker.getId(), "ALL", -1, 11));
         assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "ALL", 0, 0));
+    }
+
+    @Test
+    void isExistTest() {
+        when(bookingRepository.existsById(anyLong()))
+                .thenReturn(true);
+        assertTrue(bookingService.isExist(1L));
+
+        when(bookingRepository.existsById(anyLong()))
+                .thenReturn(false);
+        assertFalse(bookingService.isExist(1L));
     }
 }
