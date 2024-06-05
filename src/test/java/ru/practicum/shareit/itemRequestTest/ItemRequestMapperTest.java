@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestIncDto;
 import ru.practicum.shareit.request.mapper.RequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -46,5 +47,19 @@ public class ItemRequestMapperTest {
                 is(itemRequest.getRequester().getName()));
         assertThat(itemRequestDto.getRequester().getEmail(),
                 is(itemRequest.getRequester().getEmail()));
+    }
+
+    @Test
+    void toItemRequestTest() {
+        ItemRequestIncDto itemRequestIncDto = ItemRequestIncDto.builder()
+                .description("description")
+                .build();
+        User user = User.builder()
+                .id(1L)
+                .name("user name")
+                .email("user@mail.ru")
+                .build();
+        ItemRequest itemRequest = itemRequestMapper.toItemRequest(itemRequestIncDto, user, LocalDateTime.now());
+        assertThat(itemRequest.getDescription(), is(itemRequestIncDto.getDescription()));
     }
 }

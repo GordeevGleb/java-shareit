@@ -49,11 +49,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         log.info("creating request");
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("user id " + userId + " not found"));
-        ItemRequest itemRequest = ItemRequest.builder()
-                .description(itemRequestIncDto.getDescription())
-                .requester(user)
-                .created(LocalDateTime.now())
-                .build();
+        ItemRequest itemRequest = requestMapper.toItemRequest(itemRequestIncDto, user, LocalDateTime.now());
         itemRequestRepository.save(itemRequest);
 
         ItemRequestDto savedRequest = requestMapper.toItemRequestDto(itemRequest,
