@@ -446,6 +446,10 @@ public class ItemServiceTest {
                 .thenReturn(Optional.of(item));
         when(userRepository.existsById(any()))
                 .thenReturn(true);
+        when(userRepository.findById(2L))
+                .thenReturn(Optional.of(owner));
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(user));
         IncorrectUserOperationException e =
                 assertThrows(IncorrectUserOperationException.class,
                 () -> itemService.update(user.getId(),
