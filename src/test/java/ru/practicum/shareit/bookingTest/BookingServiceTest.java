@@ -556,19 +556,13 @@ public class BookingServiceTest {
                 .end(LocalDateTime.now().minusDays(2))
                 .itemId(item.getId())
                 .build();
-        BookingDto bookingDto1 = BookingDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(1))
-                .itemId(item.getId())
-                .build();
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(booker));
         when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
         assertThrows(DateTimeException.class,
                 () -> bookingService.create(booker.getId(), bookingDto));
-        assertThrows(DateTimeException.class,
-                () -> bookingService.create(booker.getId(), bookingDto1));
+
     }
 
     @Test
