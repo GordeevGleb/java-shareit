@@ -251,8 +251,8 @@ public class BookingServiceTest {
 
     @Test
     void createTestFailBookingStartTimeEqualsEndThrowsDateTimeException() {
-        LocalDateTime start = LocalDateTime.now().plusDays(2L);
-        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        LocalDateTime start = LocalDateTime.of(2024, 11, 11, 11, 11, 11);
+        LocalDateTime end = LocalDateTime.of(2024, 11, 11, 11, 11, 11);
         User owner = User.builder()
                 .id(1L)
                 .name("owner")
