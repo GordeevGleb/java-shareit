@@ -132,7 +132,7 @@ public class BookingServiceImpl implements BookingService {
         User owner = item.getOwner();
         User booker = booking.getBooker();
         if (!booker.getId().equals(userId) && !owner.getId().equals(userId)) {
-            throw new NotFoundException(" user must be booker or item owner");
+            throw new NotFoundException("user must be booker or item owner");
         }
         BookingInfoDto bookingInfoDto = bookingMapper.toBookingInfoDto(booking, userMapper.toUserDto(booker),
                 itemMapper.toItemDto(item));

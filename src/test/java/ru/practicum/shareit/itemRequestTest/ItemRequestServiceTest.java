@@ -50,7 +50,7 @@ public class ItemRequestServiceTest {
     private final ItemRepository itemRepository;
 
     @Test
-    void createTest() {
+    void createTestOk() {
         User requester = User.builder()
                 .id(2L)
                 .name("test name")
@@ -82,7 +82,20 @@ public class ItemRequestServiceTest {
     }
 
     @Test
-    void getByRequesterIdTest() {
+    void createTestFailUserThrowsNotFoundException() {
+        ItemRequestIncDto requestIncDto = ItemRequestIncDto.builder()
+                .description("description")
+                .build();
+
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemRequestService.create(1L, requestIncDto));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void getTestOk() {
         User requester = User.builder()
                 .id(2L)
                 .name("test name")
@@ -148,7 +161,16 @@ public class ItemRequestServiceTest {
     }
 
     @Test
-    void getAllTest() {
+    void getTestFailUserThrowsNotFoundException() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemRequestService.get(1L));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void getAllTestOk() {
         User owner = User.builder()
                 .id(1L)
                 .name("owner")
@@ -209,7 +231,38 @@ public class ItemRequestServiceTest {
     }
 
     @Test
-    void getByIdTest() {
+    void getAllTestFailUserThrowsNotFoundException() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemRequestService.getAll(1L, 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void getAllTestFailThrowsPaginationException() {
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+
+        PaginationException invalidPageParamsException;
+
+        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
+                () -> itemRequestService.getAll(1L, -1, 11));
+        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
+
+        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
+                () -> itemRequestService.getAll(1L, 0, 0));
+        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
+    }
+
+    @Test
+    void getByIdTestOk() {
         User owner = User.builder()
                 .id(1L)
                 .name("owner")
@@ -257,61 +310,29 @@ public class ItemRequestServiceTest {
     }
 
     @Test
-    void paginationExceptionTest() {
-        User owner = User.builder()
-                .id(1L)
-                .name("owner")
-                .email("owner@mail.ru")
-                .build();
-
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(owner));
-
-        PaginationException invalidPageParamsException;
-
-        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
-                () -> itemRequestService.getAll(1L, -1, 11));
-        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
-
-        invalidPageParamsException = Assertions.assertThrows(PaginationException.class,
-                () -> itemRequestService.getAll(1L, 0, 0));
-        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
+    void getByIdTestFailUserThrowsNotFoundException() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemRequestService.getById(1L, 1L));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
     }
 
     @Test
-    void notFoundExceptionTest() {
-        ItemRequestIncDto itemRequest = ItemRequestIncDto.builder()
-                .description("request text")
-                .build();
+    void getByIdTestFailItemRequestThrowsNotFoundException() {
         User user = User.builder()
                 .id(1L)
                 .name("test name")
                 .email("test@mail.ru")
                 .build();
-        Long unknownUserId = 999L;
-        Long unknownRequestId = 999L;
-
-        when(itemRequestRepository.findById(anyLong()))
-                .thenThrow(NotFoundException.class);
-        assertThrows(NotFoundException.class, () -> itemRequestRepository.findById(1L));
-
-        assertThrows(NotFoundException.class, () -> itemRequestService.create(unknownUserId, itemRequest));
-
-        assertThrows(NotFoundException.class, () -> itemRequestService.get(unknownUserId));
-
-        assertThrows(NotFoundException.class,
-                () -> itemRequestService.getAll(unknownUserId, 0, 11));
-
-        NotFoundException notFoundException = assertThrows(NotFoundException.class,
-                () -> itemRequestService.getById(unknownUserId, unknownRequestId));
-        assertEquals(notFoundException.getMessage(), "user id 999 not found");
 
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(user));
-        User savedUser = userRepository.findById(user.getId()).get();
-
-         assertThrows(NotFoundException.class,
-                () -> itemRequestService.getById(savedUser.getId(), unknownRequestId));
+        when(itemRequestRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemRequestService.getById(1L, 1L));
+        assertEquals(notFoundException.getMessage(), "request id 1 not found");
     }
 }
 

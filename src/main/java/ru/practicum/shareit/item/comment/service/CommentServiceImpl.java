@@ -13,10 +13,8 @@ import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.mapper.CommentMapper;
 import ru.practicum.shareit.item.comment.model.Comment;
 import ru.practicum.shareit.item.comment.repository.CommentRepository;
-import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -33,11 +31,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final UserRepository userRepository;
 
-    private final UserMapper userMapper;
-
     private final ItemRepository itemRepository;
-
-    private final ItemMapper itemMapper;
 
     private final BookingRepository bookingRepository;
 

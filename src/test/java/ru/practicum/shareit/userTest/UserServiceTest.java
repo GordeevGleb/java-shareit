@@ -1,7 +1,6 @@
 package ru.practicum.shareit.userTest;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +12,9 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserServiceImpl;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -35,7 +32,7 @@ public class UserServiceTest {
     private final UserRepository userRepository;
 
     @Test
-    void createTest() {
+    void createTestOk() {
         User user = User.builder()
                 .name("test name")
                 .email("test@mail.ru")
@@ -57,32 +54,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void NotFoundExceptionTest() {
-        when(userRepository.findById(Mockito.any()))
-                .thenThrow(NotFoundException.class);
-        assertThrows(NotFoundException.class, () -> userService.findById(999L));
-    }
-
-    @Test
-    void ConcurrentExceptionTest() {
-        UserDto userDto = UserDto.builder()
-                .name("test name")
-                .email("test@mail.ru")
-                .build();
-        User user = User.builder()
-                .name("test name")
-                .email("test@mail.ru")
-                .build();
-        when(userRepository.findById(any()))
-                .thenReturn(Optional.of(user));
-
-        when(userRepository.existsByEmail(anyString()))
-                .thenThrow(ConcurrentException.class);
-        assertThrows(ConcurrentException.class, ()-> userService.update(1L, userDto));
-    }
-
-    @Test
-    void findByIdTest() {
+    void findByIdTestOk() {
         User userToCheck = User.builder()
                 .id(1L)
                 .name("test name")
@@ -95,6 +67,15 @@ public class UserServiceTest {
 
         UserDto userDto = userService.findById(888L);
         assertThat(userDto, is(notNullValue()));
+    }
+
+    @Test
+    void findByIdTestThrowsNotFoundException() {
+        when(userRepository.findById(Mockito.any()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException =
+                assertThrows(NotFoundException.class, () -> userService.findById(999L));
+        assertEquals(notFoundException.getMessage(), "user id 999 not found");
     }
 
     @Test
@@ -121,7 +102,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void updateTest() {
+    void updateTestOk() {
         UserDto userDto = UserDto.builder()
                 .name("updated test name")
                 .email("updated@mail.ru")
@@ -150,7 +131,40 @@ public class UserServiceTest {
     }
 
     @Test
-    void deleteTest() {
+    void updateTestThrowsNotFoundException() {
+        UserDto userDto = UserDto.builder()
+                .id(1L)
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+        when(userRepository.findById(Mockito.any()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException =
+                assertThrows(NotFoundException.class, () -> userService.update(999L, userDto));
+        assertEquals(notFoundException.getMessage(), "user not found");
+    }
+
+    @Test
+    void updateTestThrowsConcurrentException() {
+        UserDto userDto = UserDto.builder()
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+        User user = User.builder()
+                .name("another name")
+                .email("test@mail.ru")
+                .build();
+        assertEquals(user.getEmail(), userDto.getEmail());
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(user));
+
+        when(userRepository.existsByEmail(anyString()))
+                .thenThrow(ConcurrentException.class);
+        assertThrows(ConcurrentException.class, ()-> userService.update(1L, userDto));
+    }
+
+    @Test
+    void deleteTestOk() {
         User user = User.builder()
                 .id(1L)
                 .name("test name")
@@ -165,11 +179,23 @@ public class UserServiceTest {
     }
 
     @Test
-    void isExistTest() {
+    void deleteTestThrowsNotFoundException() {
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> userService.delete(1L));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void isExistTestOk() {
         when(userRepository.existsById(any()))
                 .thenReturn(true);
         assertTrue(userService.isExist(1L));
+    }
 
+    @Test
+    void isExistTestFail() {
         when(userRepository.existsById(any()))
                 .thenReturn(false);
         assertFalse(userService.isExist(1L));

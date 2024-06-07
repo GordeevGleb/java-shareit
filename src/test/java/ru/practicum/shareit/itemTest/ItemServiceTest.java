@@ -20,6 +20,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -30,7 +31,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.when;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -52,38 +52,72 @@ public class ItemServiceTest {
     @MockBean
     private final CommentRepository commentRepository;
 
+    @MockBean
+    private final ItemRequestRepository itemRequestRepository;
+
     @Test
-    void createTest() {
+    void createTestOk() {
         User owner = User.builder()
                 .id(1L)
                 .name("owner")
                 .email("owner@mail.ru")
                 .build();
-
-        when(userRepository.findById(1L))
-                .thenReturn(Optional.of(owner));
-
-        ItemDto itemDto = ItemDto.builder()
+        ItemDto itemToSave = ItemDto.builder()
                 .name("item name")
                 .description("description")
                 .available(true)
                 .build();
 
-        Item item = Item.builder()
-                .id(1L)
-                .name(itemDto.getName())
-                .description(itemDto.getDescription())
-                .available(itemDto.getAvailable())
-                .owner(owner)
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+
+        ItemDto actualItem = itemService.create(1L, itemToSave);
+
+        assertThat(itemToSave, is(notNullValue()));
+        assertEquals(itemToSave.getName(), actualItem.getName());
+        assertEquals(itemToSave.getDescription(), actualItem.getDescription());
+        assertEquals(itemToSave.getAvailable(), actualItem.getAvailable());
+    }
+
+    @Test
+    void createTestFailUserThrowsNotFoundException() {
+        ItemDto itemToSave = ItemDto.builder()
+                .name("item name")
+                .description("description")
+                .available(true)
                 .build();
 
-        when(itemRepository.save(any()))
-                .thenReturn(item);
-
-        itemDto = itemService.create(1L, itemDto);
-
-        assertThat(itemDto, is(notNullValue()));
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemService.create(1L, itemToSave));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
     }
+
+    @Test
+    void createTestFailRequestThrowsNotFoundException() {
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        ItemDto itemToSave = ItemDto.builder()
+                .name("item name")
+                .description("description")
+                .available(true)
+                .requestId(1L)
+                .build();
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+        when(itemRequestRepository.findById(any()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemService.create(1L, itemToSave));
+        assertEquals(notFoundException.getMessage(), "request not found");
+    }
+
 
     @Test
     void updateTest() {
@@ -134,7 +168,83 @@ public class ItemServiceTest {
     }
 
     @Test
-    void getUsersItemsTest() {
+    void updateTestFailUserThrowsNotFoundException() {
+        ItemDto itemDto = ItemDto.builder()
+                .name("item name")
+                .description("description")
+                .available(true)
+                .build();
+        when(userRepository.existsById(any()))
+                .thenReturn(false);
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemService.update(1L, 1L, itemDto));
+        assertEquals(notFoundException.getMessage(), "user not found");
+    }
+
+    @Test
+    void updateTestFailItemThrowsNotFoundException() {
+        ItemDto itemDto = ItemDto.builder()
+                .name("item name")
+                .description("description")
+                .available(true)
+                .build();
+        when(userRepository.existsById(any()))
+                .thenReturn(true);
+        when(itemRepository.findById(any()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemService.update(1L, 1L, itemDto));
+        assertEquals(notFoundException.getMessage(), "item not found");
+    }
+
+    @Test
+    void updateTestFailUserThrowsIncorrectUserOperationException() {
+        User user = User.builder()
+                .id(1L)
+                .name("test name")
+                .email("test@mail.ru")
+                .build();
+
+        User owner = User.builder()
+                .id(2L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .owner(owner)
+                .available(true)
+                .build();
+
+        ItemDto itemDto = ItemDto.builder()
+                .name("updated name")
+                .description("updated description")
+                .available(true)
+                .build();
+
+        when(itemRepository.findById(any()))
+                .thenReturn(Optional.of(item));
+        when(userRepository.existsById(any()))
+                .thenReturn(true);
+        when(userRepository.findById(2L))
+                .thenReturn(Optional.of(owner));
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(user));
+        IncorrectUserOperationException e =
+                assertThrows(IncorrectUserOperationException.class,
+                        () -> itemService.update(user.getId(),
+                                item.getId(), itemDto));
+
+        assertEquals(e.getMessage(), "incorrect user operation");
+    }
+
+    @Test
+    void getUsersItemsTestOk() {
         User owner = User.builder()
                 .id(2L)
                 .name("owner")
@@ -229,7 +339,40 @@ public class ItemServiceTest {
     }
 
     @Test
-    void findByIdTest() {
+    void getUsersItemsTestFailUserThrowsNotFoundException() {
+        when(userRepository.existsById(any()))
+                .thenReturn(false);
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> itemService.getUsersItems(1L, 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void getUsersItemsTestFailThrowsPaginationException() {
+        User owner = User.builder()
+                .id(2L)
+                .name("user")
+                .email("user@mail.ru")
+                .build();
+
+        when(userRepository.existsById(any()))
+                .thenReturn(true);
+        when(userRepository.findById(2L))
+                .thenReturn(Optional.of(owner));
+
+        PaginationException invalidPageParamsException;
+
+        invalidPageParamsException = assertThrows(PaginationException.class,
+                () -> itemService.getUsersItems(2L, -1, 11));
+        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
+
+        invalidPageParamsException = assertThrows(PaginationException.class,
+                () -> itemService.getUsersItems(2L, 0, 0));
+        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
+    }
+
+    @Test
+    void findByIdTestOk() {
         User user = User.builder()
                 .id(1L)
                 .name("user")
@@ -311,72 +454,23 @@ public class ItemServiceTest {
                 .thenReturn(List.of(nextBooking));
         itemDto = itemService.findById(2L, 1L);
         assertThat(itemDto, is(notNullValue()));
+        assertEquals(itemDto.getName(), item.getName());
+        assertEquals(itemDto.getDescription(), item.getDescription());
+        assertEquals(itemDto.getAvailable(), item.getAvailable());
     }
 
     @Test
-    void notFoundExceptionTest() {
-        when(userRepository.findById(1L))
+    void  findByIdTestItemFailThrowsNotFoundException() {
+        when(itemRepository.findById(any()))
                 .thenReturn(Optional.empty());
 
-        ItemDto itemDto = ItemDto.builder()
-                .name("name")
-                .description("description")
-                .available(true)
-                .build();
-
-        NotFoundException notFoundException;
-
-        notFoundException = assertThrows(NotFoundException.class,
-                () -> itemService.create(1L, itemDto));
-        assertThat(notFoundException.getMessage(), is("user id 1 not found"));
-
-        notFoundException = assertThrows(NotFoundException.class,
-                () -> itemService.update(1L, 1L, itemDto));
-        assertThat(notFoundException.getMessage(), is("user not found"));
-
-        notFoundException = assertThrows(NotFoundException.class,
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
                 () -> itemService.findById(1L, 1L));
-        assertThat(notFoundException.getMessage(), is("item not found"));
-        notFoundException = assertThrows(NotFoundException.class,
-                () -> itemService.getUsersItems(1L, 0, 11));
-        assertThat(notFoundException.getMessage(), is("user id 1 not found"));
+        assertEquals(notFoundException.getMessage(), "item not found");
     }
 
     @Test
-    void paginationExceptionTest() {
-        User owner = User.builder()
-                .id(2L)
-                .name("user")
-                .email("user@mail.ru")
-                .build();
-
-        when(userRepository.existsById(any()))
-                .thenReturn(true);
-
-        when(userRepository.findById(2L))
-                .thenReturn(Optional.of(owner));
-
-        PaginationException invalidPageParamsException;
-
-        invalidPageParamsException = assertThrows(PaginationException.class,
-                () -> itemService.getUsersItems(2L, -1, 11));
-        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
-
-        invalidPageParamsException = assertThrows(PaginationException.class,
-                () -> itemService.getUsersItems(2L, 0, 0));
-        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
-
-        invalidPageParamsException = assertThrows(PaginationException.class,
-                () -> itemService.searchByText("text", -1, 11));
-        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
-
-        invalidPageParamsException = assertThrows(PaginationException.class,
-                () -> itemService.searchByText("text", -1, 0));
-        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
-    }
-
-    @Test
-    void searchByTextTest() {
+    void searchByTextTestOk() {
         User owner = User.builder()
                 .id(2L)
                 .name("owner")
@@ -415,46 +509,26 @@ public class ItemServiceTest {
     }
 
     @Test
-    void incorrectUserOperationExceptionTest() {
-        User user = User.builder()
-                .id(1L)
-                .name("test name")
-                .email("test@mail.ru")
-                .build();
-
+    void searchByTextFailThrowsPaginationException() {
         User owner = User.builder()
                 .id(2L)
-                .name("owner")
-                .email("owner@mail.ru")
+                .name("user")
+                .email("user@mail.ru")
                 .build();
 
-        Item item = Item.builder()
-                .id(1L)
-                .name("item name")
-                .description("description")
-                .owner(owner)
-                .available(true)
-                .build();
-
-        ItemDto itemDto = ItemDto.builder()
-                .name("updated name")
-                .description("updated description")
-                .available(true)
-                .build();
-
-        when(itemRepository.findById(any()))
-                .thenReturn(Optional.of(item));
         when(userRepository.existsById(any()))
                 .thenReturn(true);
+
         when(userRepository.findById(2L))
                 .thenReturn(Optional.of(owner));
-        when(userRepository.findById(any()))
-                .thenReturn(Optional.of(user));
-        IncorrectUserOperationException e =
-                assertThrows(IncorrectUserOperationException.class,
-                () -> itemService.update(user.getId(),
-                        item.getId(), itemDto));
 
-        assertEquals(e.getMessage(), "incorrect user operation");
+        PaginationException invalidPageParamsException;
+        invalidPageParamsException = assertThrows(PaginationException.class,
+                () -> itemService.searchByText("text", -1, 11));
+        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
+
+        invalidPageParamsException = assertThrows(PaginationException.class,
+                () -> itemService.searchByText("text", -1, 0));
+        assertThat(invalidPageParamsException.getMessage(), is("wrong pagination params"));
     }
 }

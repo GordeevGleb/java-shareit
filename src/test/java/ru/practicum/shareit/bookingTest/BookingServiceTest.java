@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingInfoDto;
 import ru.practicum.shareit.booking.model.Booking;
@@ -21,7 +20,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,7 +48,7 @@ public class BookingServiceTest {
     private final BookingRepository bookingRepository;
 
     @Test
-    void createTest() {
+    void createTestOk() {
         LocalDateTime start = LocalDateTime.now().plusDays(1L);
         LocalDateTime end = LocalDateTime.now().plusDays(2L);
 
@@ -106,7 +104,189 @@ public class BookingServiceTest {
     }
 
     @Test
-    void updateStatusTest() {
+    void createTestFailUserThrowsNotFoundException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        BookingDto bookingDto = BookingDto.builder()
+                .start(start)
+                .end(end)
+                .itemId(1L)
+                .build();
+
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.create(1L, bookingDto));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void createTestFailItemThrowsNotFoundException() {
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        BookingDto bookingDto = BookingDto.builder()
+                .start(start)
+                .end(end)
+                .itemId(1L)
+                .build();
+
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.create(1L, bookingDto));
+        assertEquals(notFoundException.getMessage(), "item not found");
+    }
+
+    @Test
+    void createTestFailUserEqualsOwnerThrowsNotFoundException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        BookingDto bookingDto = BookingDto.builder()
+                .start(start)
+                .end(end)
+                .itemId(1L)
+                .build();
+
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(owner));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.create(1L, bookingDto));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void createTestFailItemNotAvailableException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(false)
+                .owner(owner)
+                .build();
+        BookingDto bookingDto = BookingDto.builder()
+                .start(start)
+                .end(end)
+                .itemId(1L)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+
+        NotAvailableException notAvailableException = assertThrows(NotAvailableException.class,
+                () -> bookingService.create(3L, bookingDto));
+        assertEquals(notAvailableException.getMessage(), "item item name not available");
+    }
+
+    @Test
+    void createTestFailBookingStartTimeAfterEndThrowsDateTimeException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(3L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        BookingDto bookingDto = BookingDto.builder()
+                .start(start)
+                .end(end)
+                .itemId(1L)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+
+        DateTimeException dateTimeException = assertThrows(DateTimeException.class,
+                () -> bookingService.create(3L, bookingDto));
+        assertEquals(dateTimeException.getMessage(), "date time exception");
+    }
+
+    @Test
+    void createTestFailBookingStartTimeEqualsEndThrowsDateTimeException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(2L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        BookingDto bookingDto = BookingDto.builder()
+                .start(start)
+                .end(end)
+                .itemId(1L)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+
+        DateTimeException dateTimeException = assertThrows(DateTimeException.class,
+                () -> bookingService.create(3L, bookingDto));
+        assertEquals(dateTimeException.getMessage(), "date time exception");
+    }
+
+    @Test
+    void updateStatusThenApprovedTestOk() {
         LocalDateTime start = LocalDateTime.now().plusDays(1L);
         LocalDateTime end = LocalDateTime.now().plusDays(2L);
 
@@ -139,24 +319,13 @@ public class BookingServiceTest {
                 .bookingStatus(BookingStatus.WAITING)
                 .build();
 
-        when(userRepository.existsById(anyLong()))
-                .thenReturn(true);
-
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(owner));
-
         when(bookingRepository.findById(1L))
                 .thenReturn(Optional.of(booking));
-
-        when(bookingRepository.save(any(Booking.class)))
-                .thenReturn(booking);
 
         BookingInfoDto bookingInfoDto = bookingService.updateStatus(1L, 1L, true);
         assertThat(bookingInfoDto, is(notNullValue()));
-
-        booking.setBookingStatus(BookingStatus.WAITING);
-        when(bookingRepository.findById(1L))
-                .thenReturn(Optional.of(booking));
 
         when(bookingRepository.save(any(Booking.class)))
                 .thenAnswer(
@@ -166,28 +335,12 @@ public class BookingServiceTest {
                             return invoc;
                         }
                 );
-
-        bookingInfoDto = bookingService.updateStatus(1L, 1L, true);
         assertThat(bookingInfoDto, is(notNullValue()));
-
-        booking.setBookingStatus(BookingStatus.WAITING);
-        when(bookingRepository.findById(1L))
-                .thenReturn(Optional.of(booking));
-        when(bookingRepository.save(any(Booking.class)))
-                .thenAnswer(
-                        invocation -> {
-                            Booking invoc = invocation.getArgument(0, Booking.class);
-                            invoc.setBookingStatus(BookingStatus.REJECTED);
-                            return invoc;
-                        }
-                );
-        bookingInfoDto = bookingService.updateStatus(1L, 1L, false);
-        assertThat(bookingInfoDto, is(notNullValue()));
-        Assertions.assertEquals(bookingInfoDto.getStatus(), BookingStatus.REJECTED);
+        assertThat(bookingInfoDto.getStatus(), is(BookingStatus.APPROVED));
     }
 
     @Test
-    void getTest() {
+    void updateStatusThenRejectedOk() {
         LocalDateTime start = LocalDateTime.now().plusDays(1L);
         LocalDateTime end = LocalDateTime.now().plusDays(2L);
 
@@ -211,7 +364,207 @@ public class BookingServiceTest {
                 .email("booker@mail.ru")
                 .build();
 
-        final Booking booking = Booking.builder()
+        Booking booking = Booking.builder()
+                .id(1L)
+                .start(start)
+                .end(end)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.WAITING)
+                .build();
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+        when(bookingRepository.findById(1L))
+                .thenReturn(Optional.of(booking));
+
+        BookingInfoDto bookingInfoDto = bookingService
+                .updateStatus(1L, 1L, false);
+        assertThat(bookingInfoDto, is(notNullValue()));
+
+        when(bookingRepository.save(any(Booking.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Booking invoc = invocation.getArgument(0, Booking.class);
+                            invoc.setBookingStatus(BookingStatus.REJECTED);
+                            return invoc;
+                        }
+                );
+        assertThat(bookingInfoDto, is(notNullValue()));
+        assertThat(bookingInfoDto.getStatus(), is(BookingStatus.REJECTED));
+    }
+
+    @Test
+    void updateStatusTestFailUserThrowsNotFoundException() {
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.updateStatus(1L, 1L, true));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void updateStatusTestFailBookingThrowsNotFoundException() {
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.updateStatus(3L, 1L, true));
+        assertEquals(notFoundException.getMessage(), "booking not found");
+    }
+
+    @Test
+    void updateStatusTestFailBookingAlreadyApprovedThrowsStatusException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        Booking booking = Booking.builder()
+                .id(1L)
+                .start(start)
+                .end(end)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booking));
+
+        StatusException statusException = assertThrows(StatusException.class,
+                () -> bookingService.updateStatus(3L, 1L, true));
+        assertEquals(statusException.getMessage(), "no changes allowed");
+    }
+
+    @Test
+    void updateStatusTestFailBookingRejectedThrowsStatusException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        Booking booking = Booking.builder()
+                .id(1L)
+                .start(start)
+                .end(end)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.REJECTED)
+                .build();
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booking));
+
+        StatusException statusException = assertThrows(StatusException.class,
+                () -> bookingService.updateStatus(3L, 1L, true));
+        assertEquals(statusException.getMessage(), "no changes allowed");
+    }
+
+    @Test
+    void updateStatusTestFailUserNotOwnerThrowsNotFoundException() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        Booking booking = Booking.builder()
+                .id(1L)
+                .start(start)
+                .end(end)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.WAITING)
+                .build();
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booking));
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.updateStatus(3L, 1L, true));
+        assertEquals(notFoundException.getMessage(), "incorrect user operation");
+    }
+
+    @Test
+    void getTestOk() {
+        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+         Booking booking = Booking.builder()
                 .id(1L)
                 .start(start)
                 .end(end)
@@ -231,10 +584,19 @@ public class BookingServiceTest {
     }
 
     @Test
-    void getUserBookingTest() {
+    void getTestFailBookingThrowsNotfoundException() {
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.get(1L, 1L));
+        assertEquals(notFoundException.getMessage(), "booking id 1 not found");
+    }
+
+    @Test
+    void getTestFailUserNotBookerOrItemOwnerThrowsNotFoundException() {
         LocalDateTime start = LocalDateTime.now().plusDays(1L);
         LocalDateTime end = LocalDateTime.now().plusDays(2L);
-
         User owner = User.builder()
                 .id(1L)
                 .name("owner")
@@ -247,20 +609,17 @@ public class BookingServiceTest {
                 .available(true)
                 .owner(owner)
                 .build();
-
         User booker = User.builder()
                 .id(3L)
                 .name("booker")
                 .email("booker@mail.ru")
                 .build();
-
-        when(userRepository.existsById(anyLong()))
-                .thenReturn(true);
-
-        when(userRepository.findById(3L))
-                .thenReturn(Optional.of(booker));
-
-        Booking booking1 = Booking.builder()
+        User anotherUser = User.builder()
+                .id(4L)
+                .name("another user")
+                .email("anotheruser@mail.ru")
+                .build();
+        Booking booking = Booking.builder()
                 .id(1L)
                 .start(start)
                 .end(end)
@@ -269,67 +628,421 @@ public class BookingServiceTest {
                 .bookingStatus(BookingStatus.APPROVED)
                 .build();
 
-        when(bookingRepository.findAllByBookerId(any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking1)));
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booking));
+        when(userRepository.findById(4L))
+                .thenReturn(Optional.of(anotherUser));
 
-        List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getUsersBookings(3L, "ALL", 0, 11);
-        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.get(4L, 1L));
+        assertEquals(notFoundException.getMessage(), "user must be booker or item owner");
+    }
 
-        start = LocalDateTime.now().minusDays(2L);
-        end = LocalDateTime.now().minusDays(1L);
-        Booking booking2 = Booking.builder()
-                .id(2L)
-                .start(start)
-                .end(end)
+    @Test
+    void getUserAllBookingTestOk() {
+        LocalDateTime futureStart = LocalDateTime.now().plusDays(1L);
+        LocalDateTime futureEnd = LocalDateTime.now().plusDays(2L);
+        LocalDateTime pastStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime pastEnd = LocalDateTime.now().minusDays(2L);
+        LocalDateTime currentStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime currentEnd = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(booker));
+        Booking futureBooking = Booking.builder()
+                .id(1L)
+                .start(futureStart)
+                .end(futureEnd)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+        Booking pastBooking = Booking.builder()
+                .id(1L)
+                .start(pastStart)
+                .end(pastEnd)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+        Booking currentBooking = Booking.builder()
+                .id(1L)
+                .start(currentStart)
+                .end(currentEnd)
                 .item(item)
                 .booker(booker)
                 .bookingStatus(BookingStatus.APPROVED)
                 .build();
 
-        when(bookingRepository.findAllByBookerIdAndEndIsBefore(any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking2)));
+        when(bookingRepository.findAllByBookerId(any(), any()))
+                .thenReturn(new PageImpl<>(List.of(futureBooking, pastBooking, currentBooking)));
 
-        bookingInfoDtoList = bookingService.getUsersBookings(3L, "PAST", 0, 11);
-        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getUsersBookings(3L, "ALL", 0, 11);
+        assertFalse(bookingInfoDtoList.isEmpty());
+        assertThat(bookingInfoDtoList.size(), is(3));
+    }
 
-        start = LocalDateTime.now().plusDays(1L);
-        end = LocalDateTime.now().plusDays(2L);
-        Booking booking3 = Booking.builder()
+    @Test
+    void getUserFutureBookingsTestOk() {
+        LocalDateTime futureStart = LocalDateTime.now().plusDays(1L);
+        LocalDateTime futureEnd = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
                 .id(3L)
-                .start(start)
-                .end(end)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(booker));
+        Booking futureBooking = Booking.builder()
+                .id(1L)
+                .start(futureStart)
+                .end(futureEnd)
                 .item(item)
                 .booker(booker)
                 .bookingStatus(BookingStatus.APPROVED)
                 .build();
 
         when(bookingRepository.findAllByBookerIdAndStartIsAfter(any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking3)));
+                .thenReturn(new PageImpl<>(List.of(futureBooking)));
 
-        bookingInfoDtoList = bookingService.getUsersBookings(3L, "FUTURE", 0, 11);
-        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getUsersBookings(3L, "FUTURE", 0, 11);
+        assertFalse(bookingInfoDtoList.isEmpty());
+        assertThat(bookingInfoDtoList.size(), is(1));
+    }
 
-        start = LocalDateTime.now().minusDays(1L);
-        end = LocalDateTime.now().plusDays(2L);
-        Booking booking4 = Booking.builder()
-                .id(4L)
-                .start(start)
-                .end(end)
+    @Test
+    void getUserPastBookingsTestOk() {
+        LocalDateTime pastStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime pastEnd = LocalDateTime.now().minusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(booker));
+        Booking pastBooking = Booking.builder()
+                .id(1L)
+                .start(pastStart)
+                .end(pastEnd)
                 .item(item)
                 .booker(booker)
                 .bookingStatus(BookingStatus.APPROVED)
                 .build();
-        when(bookingRepository.findAllByBookerIdAndStartIsBeforeAndEndIsAfter(any(), any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking4)));
-        bookingInfoDtoList = bookingService.getUsersBookings(3L, "CURRENT", 0, 11);
-        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+
+        when(bookingRepository.findAllByBookerIdAndEndIsBefore(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(pastBooking)));
+
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getUsersBookings(3L, "PAST", 0, 11);
+        assertFalse(bookingInfoDtoList.isEmpty());
+        assertThat(bookingInfoDtoList.size(), is(1));
     }
 
     @Test
-    void getOwnerBookingTest() {
-        LocalDateTime start = LocalDateTime.now().plusDays(1L);
+    void getUserCurrentBookingsTestOk() {
+        LocalDateTime currentStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime currentEnd = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(booker));
+        Booking currentBooking = Booking.builder()
+                .id(1L)
+                .start(currentStart)
+                .end(currentEnd)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+
+        when(bookingRepository.findAllByBookerIdAndStartIsBeforeAndEndIsAfter(any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(currentBooking)));
+
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getUsersBookings(3L, "CURRENT", 0, 11);
+        assertFalse(bookingInfoDtoList.isEmpty());
+        assertThat(bookingInfoDtoList.size(), is(1));
+    }
+
+    @Test
+    void getUserWaitingBookingsTestOk() {
+        LocalDateTime start = LocalDateTime.now().minusDays(3L);
         LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(booker));
+        Booking waitingBooking = Booking.builder()
+                .id(1L)
+                .start(start)
+                .end(end)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.WAITING)
+                .build();
+
+        when(bookingRepository.findAllByBookerIdAndBookingStatus(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(waitingBooking)));
+
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getUsersBookings(3L, "WAITING", 0, 11);
+        assertFalse(bookingInfoDtoList.isEmpty());
+        assertThat(bookingInfoDtoList.size(), is(1));
+    }
+
+    @Test
+    void getUserRejectedBookingsTestOk() {
+        LocalDateTime start = LocalDateTime.now().minusDays(3L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(3L))
+                .thenReturn(Optional.of(booker));
+        Booking rejectedBooking = Booking.builder()
+                .id(1L)
+                .start(start)
+                .end(end)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.REJECTED)
+                .build();
+
+        when(bookingRepository.findAllByBookerIdAndBookingStatus(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(rejectedBooking)));
+
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getUsersBookings(3L, "REJECTED", 0, 11);
+        assertFalse(bookingInfoDtoList.isEmpty());
+        assertThat(bookingInfoDtoList.size(), is(1));
+    }
+
+    @Test
+    void getUsersBookingsTestFailUserThrowsNotFoundException() {
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(false);
+
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.getUsersBookings(1L, "ALL", 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+         notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.getUsersBookings(1L, "CURRENT", 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+        notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.getUsersBookings(1L, "PAST", 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+        notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.getUsersBookings(1L, "FUTURE", 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+        notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.getUsersBookings(1L, "WAITING", 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+        notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.getUsersBookings(1L, "REJECTED", 0, 11));
+        assertEquals(notFoundException.getMessage(), "user id 1 not found");
+    }
+
+    @Test
+    void getUsersBookingsTestFailUnknownStateThrowsStateException() {
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+
+        StateException stateException = assertThrows(StateException.class,
+                () -> bookingService.getUsersBookings(3L, "UNKNOWN_STATE", 0, 11));
+        assertEquals(stateException.getMessage(), "Unknown state: UNKNOWN_STATE");
+    }
+
+    @Test
+    void getUsersBookingsTestFailPaginationException() {
+        User owner = User.builder()
+                .id(1L)
+                .name("owner name")
+                .email("owner@mail.ru")
+                .build();
+        User booker = User.builder()
+                .id(2L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+        Item item = Item.builder()
+                .id(1L)
+                .name("test name")
+                .description("description")
+                .owner(owner)
+                .available(true)
+                .build();
+        Booking booking = Booking.builder()
+                .id(1L)
+                .start(LocalDateTime.now().plusDays(1))
+                .end(LocalDateTime.now().plusDays(2))
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booker));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+        when(bookingRepository.findById(anyLong()))
+                .thenReturn(Optional.of(booking));
+
+        PaginationException paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "ALL", -1, 11));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "ALL", 0, 0));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", -1, 11));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", 0, 0));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "PAST", -1, 11));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "PAST", 0, 0));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", -1, 11));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", 0, 0));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", -1, 11));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", 0, 0));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", -1, 11));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
+                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", 0, 0));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+    }
+
+    @Test
+    void getOwnerAllBookingTestOk() {
+        LocalDateTime futureStart = LocalDateTime.now().plusDays(1L);
+        LocalDateTime futureEnd = LocalDateTime.now().plusDays(2L);
+        LocalDateTime pastStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime pastEnd = LocalDateTime.now().minusDays(2L);
+        LocalDateTime currentStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime currentEnd = LocalDateTime.now().minusDays(2L);
 
         User owner = User.builder()
                 .id(1L)
@@ -357,270 +1070,286 @@ public class BookingServiceTest {
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(owner));
 
-        Booking booking1 = Booking.builder()
+        Booking futureBooking = Booking.builder()
                 .id(1L)
-                .start(start)
-                .end(end)
+                .start(futureStart)
+                .end(futureEnd)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+        Booking pastBooking = Booking.builder()
+                .id(1L)
+                .start(pastStart)
+                .end(pastEnd)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+        Booking currentBooking = Booking.builder()
+                .id(1L)
+                .start(currentStart)
+                .end(currentEnd)
                 .item(item)
                 .booker(booker)
                 .bookingStatus(BookingStatus.APPROVED)
                 .build();
 
         when(bookingRepository.findAllByItemOwnerId(any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking1)));
+                .thenReturn(new PageImpl<>(List.of(futureBooking, pastBooking, currentBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService.
                 getOwnersBookings(1L, "ALL", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        assertEquals(bookingInfoDtoList.size(), 3);
+    }
 
-        start = LocalDateTime.now().minusDays(2L);
-        end = LocalDateTime.now().minusDays(1L);
-        Booking booking2 = Booking.builder()
-                .id(2L)
-                .start(start)
-                .end(end)
-                .item(item)
-                .booker(booker)
-                .bookingStatus(BookingStatus.APPROVED)
+    @Test
+    void getFutureOwnersBookingsTestOk() {
+        LocalDateTime futureStart = LocalDateTime.now().plusDays(1L);
+        LocalDateTime futureEnd = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
                 .build();
-        when(bookingRepository.findAllByItemOwnerIdAndEndIsBefore(any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking2)));
-        bookingInfoDtoList = bookingService.getOwnersBookings(1L, "PAST", 0, 11);
-        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
-
-        start = LocalDateTime.now().plusDays(1L);
-        end = LocalDateTime.now().plusDays(2L);
-        Booking booking3 = Booking.builder()
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
                 .id(3L)
-                .start(start)
-                .end(end)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+
+        Booking futureBooking = Booking.builder()
+                .id(1L)
+                .start(futureStart)
+                .end(futureEnd)
                 .item(item)
                 .booker(booker)
                 .bookingStatus(BookingStatus.APPROVED)
                 .build();
 
         when(bookingRepository.findAllByItemOwnerIdAndStartIsAfter(any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking3)));
-        bookingInfoDtoList = bookingService.getOwnersBookings(1L, "FUTURE", 0, 11);
-        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+                .thenReturn(new PageImpl<>(List.of(futureBooking)));
 
-        start = LocalDateTime.now().minusDays(1L);
-        end = LocalDateTime.now().plusDays(2L);
-        Booking booking4 = Booking.builder()
-                .id(4L)
+        List<BookingInfoDto> bookingInfoDtoList = bookingService.
+                getOwnersBookings(1L, "FUTURE", 0, 11);
+        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        assertEquals(bookingInfoDtoList.size(), 1);
+    }
+
+    @Test
+    void getOwnersPastBookingsTestOk() {
+        LocalDateTime pastStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime pastEnd = LocalDateTime.now().minusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+
+        Booking pastBooking = Booking.builder()
+                .id(1L)
+                .start(pastStart)
+                .end(pastEnd)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+
+        when(bookingRepository.findAllByItemOwnerIdAndEndIsBefore(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(pastBooking)));
+
+        List<BookingInfoDto> bookingInfoDtoList = bookingService.
+                getOwnersBookings(1L, "PAST", 0, 11);
+        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        assertEquals(bookingInfoDtoList.size(), 1);
+    }
+
+    @Test
+    void getOwnersCurrentBookingsTestOk() {
+        LocalDateTime currentStart = LocalDateTime.now().minusDays(3L);
+        LocalDateTime currentEnd = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+
+        Booking currentBooking = Booking.builder()
+                .id(1L)
+                .start(currentStart)
+                .end(currentEnd)
+                .item(item)
+                .booker(booker)
+                .bookingStatus(BookingStatus.APPROVED)
+                .build();
+
+        when(bookingRepository
+                .findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfter(any(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(currentBooking)));
+
+        List<BookingInfoDto> bookingInfoDtoList = bookingService.
+                getOwnersBookings(1L, "CURRENT", 0, 11);
+        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        assertEquals(bookingInfoDtoList.size(), 1);
+    }
+
+    @Test
+    void getOwnersWaitingBookingsTestOk() {
+        LocalDateTime start = LocalDateTime.now().minusDays(3L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
+        User owner = User.builder()
+                .id(1L)
+                .name("owner")
+                .email("owner@mail.ru")
+                .build();
+        Item item = Item.builder()
+                .id(1L)
+                .name("item name")
+                .description("description")
+                .available(true)
+                .owner(owner)
+                .build();
+        User booker = User.builder()
+                .id(3L)
+                .name("booker")
+                .email("booker@mail.ru")
+                .build();
+
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
+
+        Booking waitingBooking = Booking.builder()
+                .id(1L)
                 .start(start)
                 .end(end)
                 .item(item)
                 .booker(booker)
                 .bookingStatus(BookingStatus.APPROVED)
                 .build();
-        when(bookingRepository.findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfter(any(), any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of(booking4)));
-        bookingInfoDtoList = bookingService.getOwnersBookings(1L, "CURRENT", 0, 11);
+
+        when(bookingRepository
+                .findAllByItemOwnerIdAndBookingStatus(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(waitingBooking)));
+
+        List<BookingInfoDto> bookingInfoDtoList = bookingService.
+                getOwnersBookings(1L, "WAITING", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        assertEquals(bookingInfoDtoList.size(), 1);
     }
 
     @Test
-    void userNotFoundExceptionTest() {
+    void getOwnersRejectedBookingsTestOk() {
+        LocalDateTime start = LocalDateTime.now().minusDays(3L);
+        LocalDateTime end = LocalDateTime.now().plusDays(2L);
         User owner = User.builder()
                 .id(1L)
-                .name("owner name")
+                .name("owner")
                 .email("owner@mail.ru")
                 .build();
-        User booker = User.builder()
-                .id(2L)
-                .name("booker")
-                .email("booker@mail.ru")
-                .build();
-
         Item item = Item.builder()
                 .id(1L)
-                .name("test name")
+                .name("item name")
                 .description("description")
-                .owner(owner)
-                .build();
-        Long unknownUserId = 999L;
-        BookingDto bookingDto = BookingDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .itemId(item.getId())
-                .build();
-        Booking booking = Booking.builder()
-                .id(1L)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(item)
-                        .booker(booker)
-                                .build();
-
-                when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> bookingService.create(unknownUserId, bookingDto));
-
-        assertThrows(NotFoundException.class,
-                () -> bookingService.updateStatus(unknownUserId, booking.getId(), true));
-        assertThrows(NotFoundException.class, () -> bookingService.get(unknownUserId, booking.getId()));
-        assertThrows(NotFoundException.class,
-                () -> bookingService.getUsersBookings(unknownUserId,
-                        "ALL", 0, 11));
-        assertThrows(NotFoundException.class,
-                () -> bookingService.getOwnersBookings(unknownUserId,
-                        "ALL", 0, 11));
-    }
-
-    @Test
-    void ItemNotFoundTest() {
-        User owner = User.builder()
-                .id(1L)
-                .name("owner name")
-                .email("owner@mail.ru")
-                .build();
-        User booker = User.builder()
-                .id(2L)
-                .name("booker")
-                .email("booker@mail.ru")
-                .build();
-
-        Item item = Item.builder()
-                .id(1L)
-                .name("test name")
-                .description("description")
-                .owner(owner)
                 .available(true)
-                .build();
-        BookingDto bookingDto = BookingDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .itemId(item.getId())
-                .build();
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booker));
-        assertThrows(NotFoundException.class, () -> bookingService.create(booker.getId(), bookingDto));
-    }
-
-    @Test
-    void notAvailableExceptionTest() {
-        User owner = User.builder()
-                .id(1L)
-                .name("owner name")
-                .email("owner@mail.ru")
+                .owner(owner)
                 .build();
         User booker = User.builder()
-                .id(2L)
+                .id(3L)
                 .name("booker")
                 .email("booker@mail.ru")
                 .build();
 
-        Item item = Item.builder()
-                .id(1L)
-                .name("test name")
-                .description("description")
-                .owner(owner)
-                .available(false)
-                .build();
-        BookingDto bookingDto = BookingDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .itemId(item.getId())
-                .build();
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booker));
-        when(itemRepository.findById(anyLong()))
-                .thenReturn(Optional.of(item));
-        assertThrows(NotAvailableException.class,
-                () -> bookingService.create(booker.getId(), bookingDto));
-    }
+        when(userRepository.existsById(anyLong()))
+                .thenReturn(true);
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(owner));
 
-    @Test
-    void dateTimeExceptionTest() {
-        User owner = User.builder()
-                .id(1L)
-                .name("owner name")
-                .email("owner@mail.ru")
-                .build();
-        User booker = User.builder()
-                .id(2L)
-                .name("booker")
-                .email("booker@mail.ru")
-                .build();
-
-        Item item = Item.builder()
-                .id(1L)
-                .name("test name")
-                .description("description")
-                .owner(owner)
-                .available(true)
-                .build();
-        BookingDto bookingDto = BookingDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().minusDays(2))
-                .itemId(item.getId())
-                .build();
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booker));
-        when(itemRepository.findById(anyLong()))
-                .thenReturn(Optional.of(item));
-        assertThrows(DateTimeException.class,
-                () -> bookingService.create(booker.getId(), bookingDto));
-
-    }
-
-    @Test
-    void statusExceptionTest() {
-        User owner = User.builder()
-                .id(1L)
-                .name("owner name")
-                .email("owner@mail.ru")
-                .build();
-        User booker = User.builder()
-                .id(2L)
-                .name("booker")
-                .email("booker@mail.ru")
-                .build();
-
-        Item item = Item.builder()
-                .id(1L)
-                .name("test name")
-                .description("description")
-                .owner(owner)
-                .available(true)
-                .build();
-        Booking approvedBooking = Booking.builder()
-                .id(1L)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(item)
-                .booker(booker)
-                .bookingStatus(BookingStatus.APPROVED)
-                .build();
         Booking rejectedBooking = Booking.builder()
-                .id(2L)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
+                .id(1L)
+                .start(start)
+                .end(end)
                 .item(item)
                 .booker(booker)
-                .bookingStatus(BookingStatus.REJECTED)
+                .bookingStatus(BookingStatus.APPROVED)
                 .build();
 
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booker));
-        when(itemRepository.findById(anyLong()))
-                .thenReturn(Optional.of(item));
-        when(bookingRepository.findById(anyLong()))
-                .thenReturn(Optional.of(approvedBooking));
-        assertThrows(StatusException.class,
-                () -> bookingService.updateStatus(booker.getId(),
-                        approvedBooking.getId(), true));
+        when(bookingRepository
+                .findAllByItemOwnerIdAndBookingStatus(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(rejectedBooking)));
 
-        when(bookingRepository.findById(anyLong()))
-                .thenReturn(Optional.of(rejectedBooking));
-        assertThrows(StatusException.class,
-                () -> bookingService.updateStatus(booker.getId(),
-                        rejectedBooking.getId(), true));
+        List<BookingInfoDto> bookingInfoDtoList = bookingService.
+                getOwnersBookings(1L, "REJECTED", 0, 11);
+        Assertions.assertFalse(bookingInfoDtoList.isEmpty());
+        assertEquals(bookingInfoDtoList.size(), 1);
     }
 
     @Test
-    void stateExceptionTest() {
+    void getOwnersBookingsTestFailWrongStateThrowsStateException() {
+        StateException stateException = assertThrows(StateException.class,
+                () -> bookingService.getOwnersBookings(1L, "UNKNOWN_STATE", 0, 11));
+        assertEquals(stateException.getMessage(), "Unknown state: UNKNOWN_STATE");
+    }
+
+    @Test
+    void getOwnersBookingsTestFailUserThrowsNotFoundException() {
+        when(userRepository.existsById(any()))
+                .thenReturn(false);
+        NotFoundException notFoundException = assertThrows(NotFoundException.class,
+                () -> bookingService.getOwnersBookings(1L, "ALL", 0, 11));
+        assertEquals(notFoundException.getMessage(), "user not found");
+    }
+
+    @Test
+    void getOwnersBookingsTestFailThrowsPaginationException() {
         User owner = User.builder()
                 .id(1L)
                 .name("owner name")
@@ -656,107 +1385,54 @@ public class BookingServiceTest {
                 .thenReturn(Optional.of(item));
         when(bookingRepository.findById(anyLong()))
                 .thenReturn(Optional.of(booking));
-        assertThrows(StateException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "UNKNOWN_STATE",
-                        0, 11));
-        assertThrows(StateException.class,
-                () -> bookingService.getOwnersBookings(owner.getId(), "UNKNOWN_STATE",
-                        0, 11));
-    }
 
-    @Test
-    void paginationExceptionTest() {
-        User owner = User.builder()
-                .id(1L)
-                .name("owner name")
-                .email("owner@mail.ru")
-                .build();
-        User booker = User.builder()
-                .id(2L)
-                .name("booker")
-                .email("booker@mail.ru")
-                .build();
-
-        Item item = Item.builder()
-                .id(1L)
-                .name("test name")
-                .description("description")
-                .owner(owner)
-                .available(true)
-                .build();
-        Booking booking = Booking.builder()
-                .id(1L)
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(2))
-                .item(item)
-                .booker(booker)
-                .bookingStatus(BookingStatus.APPROVED)
-                .build();
-
-        when(userRepository.existsById(anyLong()))
-                .thenReturn(true);
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booker));
-        when(itemRepository.findById(anyLong()))
-                .thenReturn(Optional.of(item));
-        when(bookingRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booking));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "ALL", -1, 11));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "ALL", 0, 0));
-        assertThrows(PaginationException.class,
+        PaginationException paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "ALL", -1, 11));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "ALL", 0, 0));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", -1, 11));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", 0, 0));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "CURRENT", -1, 11));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "CURRENT", 0, 0));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "PAST", -1, 11));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "PAST", 0, 0));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "PAST", -1, 11));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "PAST", 0, 0));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", -1, 11));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", 0, 0));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "FUTURE", -1, 11));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "FUTURE", 0, 0));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", -1, 11));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", 0, 0));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "WAITING", -1, 11));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "WAITING", 0, 0));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", -1, 11));
-        assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", 0, 0));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "REJECTED", -1, 11));
-        assertThrows(PaginationException.class,
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
+        paginationException = assertThrows(PaginationException.class,
                 () -> bookingService.getOwnersBookings(booker.getId(), "REJECTED", 0, 0));
+        assertEquals(paginationException.getMessage(), "wrong pagination params");
     }
 
     @Test
-    void isExistTest() {
+    void isExistTestOk() {
         when(bookingRepository.existsById(anyLong()))
                 .thenReturn(true);
         assertTrue(bookingService.isExist(1L));
+    }
 
+    @Test
+    void isExistTestFail() {
         when(bookingRepository.existsById(anyLong()))
                 .thenReturn(false);
         assertFalse(bookingService.isExist(1L));

@@ -2,15 +2,10 @@ package ru.practicum.shareit.itemTest.commentTest;
 
 
 import lombok.RequiredArgsConstructor;
-import org.assertj.core.internal.bytebuddy.matcher.ElementMatcher;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -55,7 +50,7 @@ public class CommentServiceTest {
     private final BookingRepository bookingRepository;
 
     @Test
-    void addTest() {
+    void addTestOk() {
         User owner = User.builder()
                 .id(2L)
                 .name("owner")
@@ -115,7 +110,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    void userNotFoundExceptionTest() {
+    void addTestFailUserNotFoundException() {
         CommentDto commentDto = CommentDto.builder()
                 .text("comment")
                 .build();
@@ -127,7 +122,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    void itemNotFoundTest() {
+    void addTestFailItemNotFoundException() {
         User user = User.builder()
                 .id(3L)
                 .name("user")
@@ -147,7 +142,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    void notAvailableExceptionTest() {
+    void addTestFailBookingNotAvailableException() {
         User owner = User.builder()
                 .id(2L)
                 .name("owner")
