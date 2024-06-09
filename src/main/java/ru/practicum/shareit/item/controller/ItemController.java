@@ -9,6 +9,8 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 
 @RestController
@@ -35,9 +37,9 @@ public class ItemController {
     @GetMapping
     public Collection<ItemDto> getUsersItems(@RequestHeader(USER_ID) Long userId,
                                              @RequestParam(defaultValue = "0", required = false)
-                                             @Min(0) Integer from,
+                                             @PositiveOrZero Integer from,
                                              @RequestParam(defaultValue = "10", required = false)
-                                                 @Min(1) Integer size) {
+                                                 @Positive Integer size) {
         return itemService.getUsersItems(userId, from, size);
     }
 
@@ -50,9 +52,9 @@ public class ItemController {
     @GetMapping("/search")
     public Collection<ItemDto> searchByText(@RequestParam String text,
                                             @RequestParam(defaultValue = "0", required = false)
-                                            @Min(0) Integer from,
+                                            @PositiveOrZero Integer from,
                                             @RequestParam(defaultValue = "10", required = false)
-                                                @Min(1) Integer size) {
+                                                @Positive Integer size) {
         return itemService.searchByText(text, from, size);
     }
 

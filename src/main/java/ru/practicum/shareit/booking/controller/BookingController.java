@@ -8,6 +8,8 @@ import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 
@@ -42,9 +44,9 @@ public class BookingController {
     public List<BookingInfoDto> getUsersBookings(@RequestHeader(USER_ID) Long userId,
                                                  @RequestParam(required = false, defaultValue = "ALL") String state,
                                                  @RequestParam(defaultValue = "0", required = false)
-                                                     @Min(0) Integer from,
+                                                     @PositiveOrZero Integer from,
                                                  @RequestParam(defaultValue = "10", required = false)
-                                                     @Min(1) Integer size) {
+                                                     @Positive Integer size) {
         return bookingService.getUsersBookings(userId, state, from, size);
     }
 
@@ -52,9 +54,9 @@ public class BookingController {
     public List<BookingInfoDto> getOwnersBookings(@RequestHeader(USER_ID) Long userId,
                                                   @RequestParam(required = false, defaultValue = "ALL") String state,
                                                   @RequestParam(defaultValue = "0", required = false)
-                                                      @Min(0) Integer from,
+                                                      @PositiveOrZero Integer from,
                                                   @RequestParam(defaultValue = "10", required = false)
-                                                      @Min(1) Integer size) {
+                                                      @Positive Integer size) {
         return bookingService.getOwnersBookings(userId, state, from, size);
     }
 }

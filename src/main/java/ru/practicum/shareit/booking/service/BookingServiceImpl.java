@@ -44,6 +44,8 @@ public class BookingServiceImpl implements BookingService {
 
     private final ItemMapper itemMapper;
 
+    private PageRequest pageRequest;
+
 
 
     @Override
@@ -156,8 +158,7 @@ public class BookingServiceImpl implements BookingService {
             throw new PaginationException("wrong pagination params");
         }
 
-        PageRequest pageRequest = PageRequest.of(from / size,
-                size, Sort.Direction.DESC, "start");
+         pageRequest = setPageRequestParams(from, size);
 
 
         State  validatedState = State.valueOf(value);
@@ -217,8 +218,8 @@ List<BookingInfoDto> bookingInfoDtoList = resultList.stream().map(booking ->
         if (from < 0 || size < 1) {
             throw new PaginationException("wrong pagination params");
         }
-        PageRequest pageRequest = PageRequest.of(from / size,
-                size, Sort.Direction.DESC, "start");
+        pageRequest = setPageRequestParams(from, size);
+
         Page<Booking> resultList;
         switch (validatedState) {
             case FUTURE:
@@ -261,5 +262,9 @@ List<BookingInfoDto> bookingInfoDtoList = resultList.stream().map(booking ->
     public Boolean isExist(Long bookingId) {
         log.info("booking exist check");
         return bookingRepository.existsById(bookingId);
+    }
+
+    private PageRequest setPageRequestParams(Integer from, Integer size) {
+        return PageRequest.of(from / size, size, Sort.Direction.DESC, "start");
     }
 }
