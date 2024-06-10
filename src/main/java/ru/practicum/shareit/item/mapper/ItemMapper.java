@@ -11,6 +11,7 @@ public interface ItemMapper {
 
     @Mapping(target = "id", source = "item.id")
     @Mapping(target = "name", source = "item.name")
+    @Mapping(target = "requestId", source = "item.request.id")
     ItemDto toItemDto(Item item);
 
     @Mapping(target = "id", source = "itemDto.id")

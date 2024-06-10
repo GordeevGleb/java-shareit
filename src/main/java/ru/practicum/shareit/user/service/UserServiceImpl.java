@@ -10,7 +10,6 @@ import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -59,7 +58,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("user not found"));
         String oldUserEmail = oldUser.getEmail();
         String newUserEmail = userDto.getEmail();
-        if (emailExists(newUserEmail) && !oldUserEmail.equals(newUserEmail)) {
+        if (userRepository.existsByEmail(newUserEmail) && !oldUserEmail.equals(newUserEmail)) {
             throw new ConcurrentException("email already exists");
         }
         if (Optional.ofNullable(userDto.getName()).isPresent()) {
@@ -80,15 +79,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("user id " + id + " not found"));
         userRepository.delete(userToDelete);
         log.info("user removed");
-    }
-
-    private Boolean emailExists(String email) {
-        log.info("email check");
-        List<String> allEmails = userRepository.findAll()
-                .stream()
-                .map(user -> user.getEmail())
-                .collect(Collectors.toList());
-        return allEmails.contains(email);
     }
 
     @Override

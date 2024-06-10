@@ -8,6 +8,9 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 
 @RestController
@@ -32,19 +35,27 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemDto> getUsersItems(@RequestHeader(USER_ID) Long userId) {
-        return itemService.getUsersItems(userId);
+    public Collection<ItemDto> getUsersItems(@RequestHeader(USER_ID) Long userId,
+                                             @RequestParam(defaultValue = "0", required = false)
+                                             @PositiveOrZero Integer from,
+                                             @RequestParam(defaultValue = "10", required = false)
+                                                 @Positive Integer size) {
+        return itemService.getUsersItems(userId, from, size);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto findById(@PathVariable Long itemId,
-                            @RequestHeader(value = USER_ID, required = false) Long userId) {
-        return itemService.findById(itemId, userId);
+    public ItemDto findById(@RequestHeader(value = USER_ID, required = false) Long userId,
+                            @PathVariable Long itemId) {
+        return itemService.findById(userId, itemId);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> searchByText(@RequestParam String text) {
-        return itemService.searchByText(text);
+    public Collection<ItemDto> searchByText(@RequestParam String text,
+                                            @RequestParam(defaultValue = "0", required = false)
+                                            @PositiveOrZero Integer from,
+                                            @RequestParam(defaultValue = "10", required = false)
+                                                @Positive Integer size) {
+        return itemService.searchByText(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")

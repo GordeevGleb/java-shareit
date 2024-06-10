@@ -7,6 +7,9 @@ import ru.practicum.shareit.booking.dto.BookingInfoDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 
@@ -39,13 +42,21 @@ public class BookingController {
 
     @GetMapping
     public List<BookingInfoDto> getUsersBookings(@RequestHeader(USER_ID) Long userId,
-                                                 @RequestParam(required = false, defaultValue = "ALL") String state) {
-        return bookingService.getUsersBookings(userId, state);
+                                                 @RequestParam(required = false, defaultValue = "ALL") String state,
+                                                 @RequestParam(defaultValue = "0", required = false)
+                                                     @PositiveOrZero Integer from,
+                                                 @RequestParam(defaultValue = "10", required = false)
+                                                     @Positive Integer size) {
+        return bookingService.getUsersBookings(userId, state, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingInfoDto> getOwnersBookings(@RequestHeader(USER_ID) Long userId,
-                                                  @RequestParam(required = false, defaultValue = "ALL") String state) {
-        return bookingService.getOwnersBookings(userId, state);
+                                                  @RequestParam(required = false, defaultValue = "ALL") String state,
+                                                  @RequestParam(defaultValue = "0", required = false)
+                                                      @PositiveOrZero Integer from,
+                                                  @RequestParam(defaultValue = "10", required = false)
+                                                      @Positive Integer size) {
+        return bookingService.getOwnersBookings(userId, state, from, size);
     }
 }
