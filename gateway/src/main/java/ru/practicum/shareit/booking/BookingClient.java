@@ -33,7 +33,7 @@ public class BookingClient extends BaseClient {
         State value = State.from(state)
                 .orElseThrow(() -> new StateException("Unknown state: " + state));
         Map<String, Object> parameters = Map.of(
-                "state", value.name(),
+                "state", value,
                 "from", from,
                 "size", size
         );
@@ -59,7 +59,7 @@ public class BookingClient extends BaseClient {
         State value = State.from(state)
                 .orElseThrow(() -> new StateException("Unknown state: " + state));
         Map<String, Object> parameters = Map.of(
-                "state", value.name(),
+                "state", value,
                 "from", from,
                 "size", size
         );

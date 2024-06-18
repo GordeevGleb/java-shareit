@@ -22,7 +22,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -150,21 +149,17 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingInfoDto> getUsersBookings(Long userId,
-                                                 String value,
+                                                 State state,
                                                  Integer from,
                                                  Integer size) {
-        log.info("search user's bookings by state {}", value);
+        log.info("search user's bookings by state {}", state);
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("user id " + userId + " not found");
-        }
-        if (!isStateExist(value)) {
-            throw new StateException("Unknown state: " + value);
         }
         if (from < 0 || size < 1) {
             throw new PaginationException("wrong pagination params");
         }
         pageRequest = setPageRequestParams(from, size);
-State state = State.valueOf(value);
         Page<Booking> resultList;
         switch (state) {
             case FUTURE:
@@ -209,19 +204,15 @@ State state = State.valueOf(value);
     }
 
     @Override
-    public List<BookingInfoDto> getOwnersBookings(Long userId, String value, Integer from, Integer size) {
+    public List<BookingInfoDto> getOwnersBookings(Long userId, State state, Integer from, Integer size) {
         log.info("searching for item owner's bookings");
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("user not found");
-        }
-        if (!isStateExist(value)) {
-            throw new StateException("Unknown state: " + value);
         }
         if (from < 0 || size < 1) {
             throw new PaginationException("wrong pagination params");
         }
         pageRequest = setPageRequestParams(from, size);
-        State state = State.valueOf(value);
         Page<Booking> resultList;
         switch (state) {
             case FUTURE:
@@ -268,9 +259,5 @@ State state = State.valueOf(value);
 
     private PageRequest setPageRequestParams(Integer from, Integer size) {
         return PageRequest.of(from / size, size, Sort.Direction.DESC, "start");
-    }
-
-    private Boolean isStateExist(String value) {
-        return Arrays.stream(State.values()).anyMatch(state -> state.name().equalsIgnoreCase(value));
     }
 }

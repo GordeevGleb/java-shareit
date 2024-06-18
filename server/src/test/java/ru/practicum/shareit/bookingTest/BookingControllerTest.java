@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.shareit.booking.dto.State.ALL;
 
 @WebMvcTest(controllers = BookingController.class)
 class BookingControllerTest {
@@ -161,7 +162,7 @@ class BookingControllerTest {
 
     @Test
     void getUsersBookingsTest() throws Exception {
-        when(bookingService.getUsersBookings(1L, "ALL", 0, 10))
+        when(bookingService.getUsersBookings(1L, ALL, 0, 10))
                 .thenReturn(List.of(bookingInfoDto));
 
         mvc.perform(get("/bookings/")
@@ -180,7 +181,7 @@ class BookingControllerTest {
 
     @Test
     void getOwnersBookingsTest() throws Exception {
-        when(bookingService.getOwnersBookings(1L, "ALL", 0, 10))
+        when(bookingService.getOwnersBookings(1L, ALL, 0, 10))
                 .thenReturn(List.of(bookingInfoDto));
 
         mvc.perform(get("/bookings/owner")

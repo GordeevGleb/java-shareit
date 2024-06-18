@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static ru.practicum.shareit.booking.dto.State.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -696,7 +697,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(futureBooking, pastBooking, currentBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getUsersBookings(3L, "ALL", 0, 11);
+                .getUsersBookings(3L, ALL, 0, 11);
         assertFalse(bookingInfoDtoList.isEmpty());
         assertThat(bookingInfoDtoList.size(), is(3));
     }
@@ -739,7 +740,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(futureBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getUsersBookings(3L, "FUTURE", 0, 11);
+                .getUsersBookings(3L, FUTURE, 0, 11);
         assertFalse(bookingInfoDtoList.isEmpty());
         assertThat(bookingInfoDtoList.size(), is(1));
     }
@@ -782,7 +783,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(pastBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getUsersBookings(3L, "PAST", 0, 11);
+                .getUsersBookings(3L, PAST, 0, 11);
         assertFalse(bookingInfoDtoList.isEmpty());
         assertThat(bookingInfoDtoList.size(), is(1));
     }
@@ -825,7 +826,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(currentBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getUsersBookings(3L, "CURRENT", 0, 11);
+                .getUsersBookings(3L, CURRENT, 0, 11);
         assertFalse(bookingInfoDtoList.isEmpty());
         assertThat(bookingInfoDtoList.size(), is(1));
     }
@@ -868,7 +869,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(waitingBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getUsersBookings(3L, "WAITING", 0, 11);
+                .getUsersBookings(3L, WAITING, 0, 11);
         assertFalse(bookingInfoDtoList.isEmpty());
         assertThat(bookingInfoDtoList.size(), is(1));
     }
@@ -911,7 +912,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(rejectedBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getUsersBookings(3L, "REJECTED", 0, 11);
+                .getUsersBookings(3L, REJECTED, 0, 11);
         assertFalse(bookingInfoDtoList.isEmpty());
         assertThat(bookingInfoDtoList.size(), is(1));
     }
@@ -922,42 +923,42 @@ public class BookingServiceTest {
                 .thenReturn(false);
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class,
-                () -> bookingService.getUsersBookings(1L, "ALL", 0, 11));
+                () -> bookingService.getUsersBookings(1L, ALL, 0, 11));
         assertEquals(notFoundException.getMessage(), "user id 1 not found");
          notFoundException = assertThrows(NotFoundException.class,
-                () -> bookingService.getUsersBookings(1L, "CURRENT", 0, 11));
+                () -> bookingService.getUsersBookings(1L, CURRENT, 0, 11));
         assertEquals(notFoundException.getMessage(), "user id 1 not found");
         notFoundException = assertThrows(NotFoundException.class,
-                () -> bookingService.getUsersBookings(1L, "PAST", 0, 11));
+                () -> bookingService.getUsersBookings(1L, PAST, 0, 11));
         assertEquals(notFoundException.getMessage(), "user id 1 not found");
         notFoundException = assertThrows(NotFoundException.class,
-                () -> bookingService.getUsersBookings(1L, "FUTURE", 0, 11));
+                () -> bookingService.getUsersBookings(1L, FUTURE, 0, 11));
         assertEquals(notFoundException.getMessage(), "user id 1 not found");
         notFoundException = assertThrows(NotFoundException.class,
-                () -> bookingService.getUsersBookings(1L, "WAITING", 0, 11));
+                () -> bookingService.getUsersBookings(1L, WAITING, 0, 11));
         assertEquals(notFoundException.getMessage(), "user id 1 not found");
         notFoundException = assertThrows(NotFoundException.class,
-                () -> bookingService.getUsersBookings(1L, "REJECTED", 0, 11));
+                () -> bookingService.getUsersBookings(1L, REJECTED, 0, 11));
         assertEquals(notFoundException.getMessage(), "user id 1 not found");
     }
 
-    @Test
-    void getUsersBookingsTestFailUnknownStateThrowsStateException() {
-        User booker = User.builder()
-                .id(3L)
-                .name("booker")
-                .email("booker@mail.ru")
-                .build();
-
-        when(userRepository.existsById(anyLong()))
-                .thenReturn(true);
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booker));
-
-        StateException stateException = assertThrows(StateException.class,
-                () -> bookingService.getUsersBookings(3L, "UNKNOWN_STATE", 0, 11));
-        assertEquals(stateException.getMessage(), "Unknown state: UNKNOWN_STATE");
-    }
+//    @Test
+//    void getUsersBookingsTestFailUnknownStateThrowsStateException() {
+//        User booker = User.builder()
+//                .id(3L)
+//                .name("booker")
+//                .email("booker@mail.ru")
+//                .build();
+//
+//        when(userRepository.existsById(anyLong()))
+//                .thenReturn(true);
+//        when(userRepository.findById(anyLong()))
+//                .thenReturn(Optional.of(booker));
+//
+//        StateException stateException = assertThrows(StateException.class,
+//                () -> bookingService.getUsersBookings(3L, UNKNOWN_STATE, 0, 11));
+//        assertEquals(stateException.getMessage(), "Unknown state: UNKNOWN_STATE");
+//    }
 
     @Test
     void getUsersBookingsTestFailPaginationException() {
@@ -998,40 +999,40 @@ public class BookingServiceTest {
                 .thenReturn(Optional.of(booking));
 
         PaginationException paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "ALL", -1, 11));
+                () -> bookingService.getUsersBookings(booker.getId(), ALL, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "ALL", 0, 0));
+                () -> bookingService.getUsersBookings(booker.getId(), ALL, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", -1, 11));
+                () -> bookingService.getUsersBookings(booker.getId(), CURRENT, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "CURRENT", 0, 0));
+                () -> bookingService.getUsersBookings(booker.getId(), CURRENT, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "PAST", -1, 11));
+                () -> bookingService.getUsersBookings(booker.getId(), PAST, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "PAST", 0, 0));
+                () -> bookingService.getUsersBookings(booker.getId(), PAST, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", -1, 11));
+                () -> bookingService.getUsersBookings(booker.getId(), FUTURE, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "FUTURE", 0, 0));
+                () -> bookingService.getUsersBookings(booker.getId(), FUTURE, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", -1, 11));
+                () -> bookingService.getUsersBookings(booker.getId(), WAITING, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "WAITING", 0, 0));
+                () -> bookingService.getUsersBookings(booker.getId(), WAITING, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", -1, 11));
+                () -> bookingService.getUsersBookings(booker.getId(), REJECTED, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getUsersBookings(booker.getId(), "REJECTED", 0, 0));
+                () -> bookingService.getUsersBookings(booker.getId(), REJECTED, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
     }
 
@@ -1099,7 +1100,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(futureBooking, pastBooking, currentBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getOwnersBookings(1L, "ALL", 0, 11);
+                .getOwnersBookings(1L, ALL, 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 3);
     }
@@ -1144,7 +1145,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(futureBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getOwnersBookings(1L, "FUTURE", 0, 11);
+                .getOwnersBookings(1L, FUTURE, 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1189,7 +1190,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(pastBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getOwnersBookings(1L, "PAST", 0, 11);
+                .getOwnersBookings(1L, PAST, 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1235,7 +1236,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(currentBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getOwnersBookings(1L, "CURRENT", 0, 11);
+                .getOwnersBookings(1L, CURRENT, 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1281,7 +1282,7 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(waitingBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getOwnersBookings(1L, "WAITING", 0, 11);
+                .getOwnersBookings(1L, WAITING, 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1327,33 +1328,33 @@ public class BookingServiceTest {
                 .thenReturn(new PageImpl<>(List.of(rejectedBooking)));
 
         List<BookingInfoDto> bookingInfoDtoList = bookingService
-                .getOwnersBookings(1L, "REJECTED", 0, 11);
+                .getOwnersBookings(1L, REJECTED, 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
 
-    @Test
-    void getOwnersBookingsTestFailWrongStateThrowsStateException() {
-        User owner = User.builder()
-                .id(1L)
-                .name("owner")
-                .email("owner@mail.ru")
-                .build();
-        when(userRepository.existsById(any()))
-                .thenReturn(true);
-        when(userRepository.findById(any()))
-                .thenReturn(Optional.of(owner));
-        StateException stateException = assertThrows(StateException.class,
-                () -> bookingService.getOwnersBookings(1L, "UNKNOWN_STATE", 0, 11));
-        assertEquals(stateException.getMessage(), "Unknown state: UNKNOWN_STATE");
-    }
+//    @Test
+//    void getOwnersBookingsTestFailWrongStateThrowsStateException() {
+//        User owner = User.builder()
+//                .id(1L)
+//                .name("owner")
+//                .email("owner@mail.ru")
+//                .build();
+//        when(userRepository.existsById(any()))
+//                .thenReturn(true);
+//        when(userRepository.findById(any()))
+//                .thenReturn(Optional.of(owner));
+//        StateException stateException = assertThrows(StateException.class,
+//                () -> bookingService.getOwnersBookings(1L, "UNKNOWN_STATE", 0, 11));
+//        assertEquals(stateException.getMessage(), "Unknown state: UNKNOWN_STATE");
+//    }
 
     @Test
     void getOwnersBookingsTestFailUserThrowsNotFoundException() {
         when(userRepository.existsById(any()))
                 .thenReturn(false);
         NotFoundException notFoundException = assertThrows(NotFoundException.class,
-                () -> bookingService.getOwnersBookings(1L, "ALL", 0, 11));
+                () -> bookingService.getOwnersBookings(1L, ALL, 0, 11));
         assertEquals(notFoundException.getMessage(), "user not found");
     }
 
@@ -1396,40 +1397,40 @@ public class BookingServiceTest {
                 .thenReturn(Optional.of(booking));
 
         PaginationException paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "ALL", -1, 11));
+                () -> bookingService.getOwnersBookings(booker.getId(), ALL, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "ALL", 0, 0));
+                () -> bookingService.getOwnersBookings(booker.getId(), ALL, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "CURRENT", -1, 11));
+                () -> bookingService.getOwnersBookings(booker.getId(), CURRENT, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "CURRENT", 0, 0));
+                () -> bookingService.getOwnersBookings(booker.getId(), CURRENT, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "PAST", -1, 11));
+                () -> bookingService.getOwnersBookings(booker.getId(), PAST, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "PAST", 0, 0));
+                () -> bookingService.getOwnersBookings(booker.getId(), PAST, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "FUTURE", -1, 11));
+                () -> bookingService.getOwnersBookings(booker.getId(), FUTURE, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "FUTURE", 0, 0));
+                () -> bookingService.getOwnersBookings(booker.getId(), FUTURE, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "WAITING", -1, 11));
+                () -> bookingService.getOwnersBookings(booker.getId(), WAITING, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "WAITING", 0, 0));
+                () -> bookingService.getOwnersBookings(booker.getId(), WAITING, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "REJECTED", -1, 11));
+                () -> bookingService.getOwnersBookings(booker.getId(), REJECTED, -1, 11));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
         paginationException = assertThrows(PaginationException.class,
-                () -> bookingService.getOwnersBookings(booker.getId(), "REJECTED", 0, 0));
+                () -> bookingService.getOwnersBookings(booker.getId(), REJECTED, 0, 0));
         assertEquals(paginationException.getMessage(), "wrong pagination params");
     }
 
