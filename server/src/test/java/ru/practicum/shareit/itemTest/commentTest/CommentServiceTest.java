@@ -12,6 +12,7 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotAvailableException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
+import ru.practicum.shareit.item.comment.dto.CommentIncDto;
 import ru.practicum.shareit.item.comment.model.Comment;
 import ru.practicum.shareit.item.comment.repository.CommentRepository;
 import ru.practicum.shareit.item.comment.service.CommentServiceImpl;
@@ -89,7 +90,7 @@ public class CommentServiceTest {
         when(commentRepository.save(any()))
                 .thenReturn(comment);
 
-        CommentDto commentDto = CommentDto.builder()
+        CommentIncDto commentIncDto = CommentIncDto.builder()
                 .text("comment")
                 .build();
 
@@ -105,19 +106,19 @@ public class CommentServiceTest {
                 .findTopByItemIdAndBookerIdAndEndIsBeforeAndBookingStatusIs(any(), any(), any(), any(), any())
         ).thenReturn(Optional.of(booking));
 
-        commentDto = commentService.comment(3L, 1L, commentDto);
+        CommentDto commentDto = commentService.comment(3L, 1L, commentIncDto);
         assertThat(commentDto, is(notNullValue()));
     }
 
     @Test
     void addTestFailUserNotFoundException() {
-        CommentDto commentDto = CommentDto.builder()
+        CommentIncDto commentIncDto = CommentIncDto.builder()
                 .text("comment")
                 .build();
         when(userRepository.findById(any()))
                 .thenReturn(Optional.empty());
         NotFoundException notFoundException = assertThrows(NotFoundException.class,
-                () -> commentService.comment(1L, 1L, commentDto));
+                () -> commentService.comment(1L, 1L, commentIncDto));
         assertEquals(notFoundException.getMessage(), "user id 1 not found");
     }
 
@@ -132,12 +133,12 @@ public class CommentServiceTest {
                 .thenReturn(Optional.of(user));
         when(itemRepository.findById(any()))
                 .thenReturn(Optional.empty());
-        CommentDto commentDto = CommentDto.builder()
+        CommentIncDto commentIncDto = CommentIncDto.builder()
                 .text("comment")
                 .build();
         NotFoundException notFoundException = assertThrows(NotFoundException.class,
                 () -> commentService.comment(user.getId(),
-                        1L, commentDto));
+                        1L, commentIncDto));
         assertEquals(notFoundException.getMessage(), "item id 1 not found");
     }
 
@@ -159,14 +160,14 @@ public class CommentServiceTest {
                 .thenReturn(Optional.of(owner));
         when(itemRepository.findById(any()))
                 .thenReturn(Optional.of(item));
-        CommentDto commentDto = CommentDto.builder()
+        CommentIncDto commentIncDto = CommentIncDto.builder()
                 .text("comment")
                 .build();
         when(bookingRepository
                 .findTopByItemIdAndBookerIdAndEndIsBeforeAndBookingStatusIs(any(), any(), any(), any(), any()))
                 .thenReturn(Optional.empty());
         NotAvailableException notAvailableException = assertThrows(NotAvailableException.class,
-                () -> commentService.comment(2L, 1L, commentDto));
+                () -> commentService.comment(2L, 1L, commentIncDto));
         assertEquals(notAvailableException.getMessage(), "booking not found");
 
     }

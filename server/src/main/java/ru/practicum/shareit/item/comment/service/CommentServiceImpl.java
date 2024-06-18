@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotAvailableException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
+import ru.practicum.shareit.item.comment.dto.CommentIncDto;
 import ru.practicum.shareit.item.comment.mapper.CommentMapper;
 import ru.practicum.shareit.item.comment.model.Comment;
 import ru.practicum.shareit.item.comment.repository.CommentRepository;
@@ -36,7 +37,7 @@ public class CommentServiceImpl implements CommentService {
     private final BookingRepository bookingRepository;
 
     @Override
-    public CommentDto comment(Long userId, Long itemId, CommentDto commentDto) {
+    public CommentDto comment(Long userId, Long itemId, CommentIncDto commentIncDto) {
         log.info("creating a comment");
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("user id " + userId + " not found"));
@@ -48,9 +49,13 @@ public class CommentServiceImpl implements CommentService {
                         Sort.by(Sort.Direction.DESC, "end"))
                 .orElseThrow(() -> new NotAvailableException("booking not found"));
 
-
-        Comment comment = commentMapper.toComment(commentDto, item, user, LocalDateTime.now());
-        commentRepository.save(comment);
+        Comment comment = Comment.builder()
+                .text(commentIncDto.getText())
+                .item(item)
+                .author(user)
+                .created(LocalDateTime.now())
+                .build();
+        comment = commentRepository.save(comment);
         log.info("comment created");
         return commentMapper.toCommentDto(comment, user.getName());
     }

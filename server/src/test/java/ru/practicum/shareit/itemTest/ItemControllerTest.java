@@ -10,6 +10,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
+import ru.practicum.shareit.item.comment.dto.CommentIncDto;
 import ru.practicum.shareit.item.comment.service.CommentService;
 import ru.practicum.shareit.item.controller.ItemController;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -49,7 +50,7 @@ class ItemControllerTest {
 
     private ItemDto itemDtoUpdated;
 
-    private CommentDto commentDtoCreateTest;
+    private CommentIncDto commentIncDto;
 
     private CommentDto commentDtoCreated;
 
@@ -79,7 +80,7 @@ class ItemControllerTest {
                 .available(true)
                 .build();
 
-        commentDtoCreateTest = CommentDto.builder()
+        commentIncDto = CommentIncDto.builder()
                 .text("test comment")
                 .build();
 
@@ -166,11 +167,11 @@ class ItemControllerTest {
 
     @Test
     public void commentTest() throws Exception {
-        when(commentService.comment(1L, 1L, commentDtoCreateTest))
+        when(commentService.comment(1L, 1L, commentIncDto))
                 .thenReturn(commentDtoCreated);
 
         mvc.perform(post("/items/1/comment")
-                        .content(mapper.writeValueAsString(commentDtoCreateTest))
+                        .content(mapper.writeValueAsString(commentIncDto))
                         .header("X-Sharer-User-Id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
