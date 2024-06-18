@@ -15,5 +15,5 @@ import javax.validation.constraints.NotBlank;
 public class CommentIncDto {
 
     @NotBlank
-    private String comment;
+    private String text;
 }
