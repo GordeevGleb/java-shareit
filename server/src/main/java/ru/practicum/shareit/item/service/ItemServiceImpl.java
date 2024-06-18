@@ -81,12 +81,12 @@ public class ItemServiceImpl implements ItemService {
         PageRequest pageRequest = PageRequest.of(from, size, Sort.Direction.ASC, "id");
         Page<Item> items = itemRepository.findAllByOwnerId(userId, pageRequest);
         Collection<Booking> lastBookings = bookingRepository
-                .findAllByItemOwnerIdAndBookingStatusIsAndEndBefore(userId,
+                .findAllByItemOwnerIdAndBookingStatusIsAndStartBefore(userId,
                         BookingStatus.APPROVED,
                         LocalDateTime.now(),
                         Sort.by("start").descending());
         Collection<Booking> nextBookings = bookingRepository
-                .findAllByItemOwnerIdAndBookingStatusIsAndEndAfter(userId,
+                .findAllByItemOwnerIdAndBookingStatusIsAndStartAfter(userId,
                         BookingStatus.APPROVED,
                         LocalDateTime.now(),
                         Sort.by("start").ascending());
@@ -129,12 +129,12 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("item not found"));
         if (Optional.ofNullable(userId).isPresent() && (item.getOwner().getId().equals(userId))) {
             Collection<Booking> lastBookings = bookingRepository
-                    .findAllByItemOwnerIdAndBookingStatusIsAndEndBefore(userId,
+                    .findAllByItemOwnerIdAndBookingStatusIsAndStartBefore(userId,
                             BookingStatus.APPROVED,
                             LocalDateTime.now(),
                             Sort.by("start").descending());
             Collection<Booking> nextBookings = bookingRepository
-                    .findAllByItemOwnerIdAndBookingStatusIsAndEndAfter(userId,
+                    .findAllByItemOwnerIdAndBookingStatusIsAndStartAfter(userId,
                             BookingStatus.APPROVED,
                             LocalDateTime.now(),
                             Sort.by("start").ascending());
