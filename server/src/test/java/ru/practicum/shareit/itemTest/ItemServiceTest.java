@@ -314,9 +314,9 @@ public class ItemServiceTest {
                 .booker(booker)
                 .build();
 
-        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndEndBefore(any(), any(), any(), any()))
+        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndStartBefore(any(), any(), any(), any()))
                 .thenReturn(List.of(lastBooking));
-        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndEndAfter(any(), any(), any(), any()))
+        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndStartAfter(any(), any(), any(), any()))
                 .thenReturn(List.of(nextBooking));
 
         itemDtos = itemService.getUsersItems(2L, 0, 11);
@@ -448,9 +448,9 @@ public class ItemServiceTest {
         itemDto = itemService.findById(1L, 1L);
         assertThat(itemDto, is(notNullValue()));
 
-        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndEndBefore(any(), any(), any(), any()))
+        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndStartBefore(any(), any(), any(), any()))
                 .thenReturn(List.of(lastBooking));
-        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndEndAfter(any(), any(), any(), any()))
+        when(bookingRepository.findAllByItemOwnerIdAndBookingStatusIsAndStartAfter(any(), any(), any(), any()))
                 .thenReturn(List.of(nextBooking));
         itemDto = itemService.findById(2L, 1L);
         assertThat(itemDto, is(notNullValue()));
