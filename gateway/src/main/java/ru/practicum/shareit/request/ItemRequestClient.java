@@ -36,7 +36,7 @@ return post("", userId, itemRequestIncDto);
 
     public ResponseEntity<Object> getAll(Long userId, Integer from, Integer size) {
         Map<String, Object> parameters = Map.of("from", from,
-                "size" , size);
+                "size", size);
         return get("/all?from={from}&size={size}", userId, parameters);
     }
 
