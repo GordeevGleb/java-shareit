@@ -160,7 +160,7 @@ public class UserServiceTest {
 
         when(userRepository.existsByEmail(anyString()))
                 .thenThrow(ConcurrentException.class);
-        assertThrows(ConcurrentException.class, ()-> userService.update(1L, userDto));
+        assertThrows(ConcurrentException.class, () -> userService.update(1L, userDto));
     }
 
     @Test

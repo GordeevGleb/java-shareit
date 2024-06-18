@@ -1098,8 +1098,8 @@ public class BookingServiceTest {
         when(bookingRepository.findAllByItemOwnerId(any(), any()))
                 .thenReturn(new PageImpl<>(List.of(futureBooking, pastBooking, currentBooking)));
 
-        List<BookingInfoDto> bookingInfoDtoList = bookingService.
-                getOwnersBookings(1L, "ALL", 0, 11);
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getOwnersBookings(1L, "ALL", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 3);
     }
@@ -1143,8 +1143,8 @@ public class BookingServiceTest {
         when(bookingRepository.findAllByItemOwnerIdAndStartIsAfter(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(futureBooking)));
 
-        List<BookingInfoDto> bookingInfoDtoList = bookingService.
-                getOwnersBookings(1L, "FUTURE", 0, 11);
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getOwnersBookings(1L, "FUTURE", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1188,8 +1188,8 @@ public class BookingServiceTest {
         when(bookingRepository.findAllByItemOwnerIdAndEndIsBefore(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(pastBooking)));
 
-        List<BookingInfoDto> bookingInfoDtoList = bookingService.
-                getOwnersBookings(1L, "PAST", 0, 11);
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getOwnersBookings(1L, "PAST", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1234,8 +1234,8 @@ public class BookingServiceTest {
                 .findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfter(any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(currentBooking)));
 
-        List<BookingInfoDto> bookingInfoDtoList = bookingService.
-                getOwnersBookings(1L, "CURRENT", 0, 11);
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getOwnersBookings(1L, "CURRENT", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1280,8 +1280,8 @@ public class BookingServiceTest {
                 .findAllByItemOwnerIdAndBookingStatus(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(waitingBooking)));
 
-        List<BookingInfoDto> bookingInfoDtoList = bookingService.
-                getOwnersBookings(1L, "WAITING", 0, 11);
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getOwnersBookings(1L, "WAITING", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }
@@ -1326,8 +1326,8 @@ public class BookingServiceTest {
                 .findAllByItemOwnerIdAndBookingStatus(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(rejectedBooking)));
 
-        List<BookingInfoDto> bookingInfoDtoList = bookingService.
-                getOwnersBookings(1L, "REJECTED", 0, 11);
+        List<BookingInfoDto> bookingInfoDtoList = bookingService
+                .getOwnersBookings(1L, "REJECTED", 0, 11);
         Assertions.assertFalse(bookingInfoDtoList.isEmpty());
         assertEquals(bookingInfoDtoList.size(), 1);
     }

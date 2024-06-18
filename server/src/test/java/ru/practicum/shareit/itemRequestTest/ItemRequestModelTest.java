@@ -25,7 +25,7 @@ class ItemRequestModelTest {
     JacksonTester<ItemRequestIncDto> jsonInc;
 
     @Test
-    void ItemRequestDtoTest() throws Exception {
+    void itemRequestDtoTest() throws Exception {
         ItemRequestIncDto itemRequestIncDto = ItemRequestIncDto.builder()
                 .description("description")
                 .build();
