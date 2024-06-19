@@ -18,16 +18,13 @@ public class ItemRequestClient extends BaseClient {
 
     @Autowired
     public ItemRequestClient(@Value("${shareit-server.url}") String serverUrl, RestTemplateBuilder builder) {
-        super(
-                builder
-                        .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PREFIX))
-                        .requestFactory(HttpComponentsClientHttpRequestFactory::new)
-                        .build()
-        );
+        super(builder.uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PREFIX))
+                .requestFactory(HttpComponentsClientHttpRequestFactory::new)
+                .build());
     }
 
     public ResponseEntity<Object> create(Long userId, ItemRequestIncDto itemRequestIncDto) {
-return post("", userId, itemRequestIncDto);
+        return post("", userId, itemRequestIncDto);
     }
 
     public ResponseEntity<Object> get(Long userId) {

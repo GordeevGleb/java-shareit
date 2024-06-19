@@ -48,7 +48,7 @@ public class CommentServiceImpl implements CommentService {
                         userId, LocalDateTime.now(), BookingStatus.APPROVED,
                         Sort.by(Sort.Direction.DESC, "end"))
                 .orElseThrow(() -> new NotAvailableException("booking not found"));
-Comment comment = commentRepository.save(commentMapper.toComment(commentIncDto, item, user, LocalDateTime.now()));
+        Comment comment = commentRepository.save(commentMapper.toComment(commentIncDto, item, user, LocalDateTime.now()));
         log.info("comment created");
         return commentMapper.toCommentDto(comment, user.getName());
     }

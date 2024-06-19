@@ -46,7 +46,6 @@ public class BookingServiceImpl implements BookingService {
     private PageRequest pageRequest;
 
 
-
     @Override
     public BookingInfoDto create(Long userId, BookingDto bookingDto) {
         log.info("creating booking");
